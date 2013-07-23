@@ -29,8 +29,9 @@ public:
     int SIVIA_f(box X0);
  //   void contractCircle(interval &x0, double y0, interval &x1, double y1, interval &d);
 
-    interval dist[4][4];
+    interval dist[7][7];
     vector<box> result;
+    int m;
     int C;
     void getDistances(vector<robot*> &robs);
 
@@ -43,6 +44,12 @@ public:
     void contractR2(box &X);
 
     box getResult();
+    void stateEstim(box &X, vector<robot *> &robs);
+    void Incremente(interval &X1, interval &Y1, interval &X, interval &Y, double theta, double vit);
+    void Incremente(box &X0, box X, double theta, double vit);
+    void Decremente(box &X0, box X, double theta, double vit);
+    void Decremente(interval &X1, interval &Y1, interval &X, interval &Y, double theta, double V);
+    void innerContract(box &X);
 protected:
 
 signals:
