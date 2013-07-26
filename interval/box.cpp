@@ -47,7 +47,16 @@ box::box (const box &X)
 {       if (&X==this) return;
 	dim=Size(X);
 	data=new interval[dim];
-	for (int k=1; k<=dim; k++) (*this)[k]=X[k];
+        for (int k=1; k<=dim; k++) (*this)[k]=X[k];
+}
+
+box::box(const box &X, int deb, int fin)
+{
+    dim = fin-deb;
+    data = new interval[dim];
+    for(int i = 1; i < dim; i++){
+        (*this)[i+1] = X[deb + i  ];
+    }
 }
 //----------------------------------------------------------------------
 box::~box () {delete [] data;}
@@ -170,7 +179,23 @@ QDebug operator<<(QDebug os, const box&X)
 }
 //----------------------------------------------------------------------
 
+//*********************************************************************
+//******************         FONCTION PERSO           *****************
+//*********************************************************************
+box  box::extract(int indice, int size){
+    box b(size);
+    for(int i = 1; i < size+1; i++){
+        b[i] = (*this)[indice+i];
+    }
+    return b ;
+}
 
+void  box::remplace(box &X, int indice){
+
+    for(int i = 1; i < X.dim+1; i++){
+        (*this)[indice+i] = X[i];
+    }
+}
 
 
 //*********************************************************************
@@ -200,7 +225,7 @@ box Sup(box X)
 }
 //----------------------------------------------------------------------
 box Concat(const box& X, const box& Y)
-/*  Produit Cartesien ou Concaténation de deuX pavés X et y :
+/*  Produit Cartesien ou Concatnation de deuX pavs X et y :
        Ans=[X,Y]     =>     Ans=Concat(X,Y); */
 {  double dim=X.dim+Y.dim; box Ans(dim);
    if ((!X.IsEmpty())&&(!Y.IsEmpty()))
@@ -211,7 +236,7 @@ box Concat(const box& X, const box& Y)
 }
 //----------------------------------------------------------------------
 box Proj(const box& X, int i, int j)
-/* Projection du pavé X dans un espace de dimension dim=(j-i)+1;
+/* Projection du pav X dans un espace de dimension dim=(j-i)+1;
    X=[[X1],[X2],..,[Xi],..,[Xj],..[Xn]]
    =>  Proj(X,i,j)=[[Xi],..,[Xj]] et Proj(X,i,i)=[Xi] */
 {  int dim=abs(j-i)+1; box Ans(dim);

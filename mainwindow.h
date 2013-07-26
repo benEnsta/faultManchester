@@ -21,12 +21,13 @@ public:
     ~MainWindow();
     
     void drawRobots();
-    void drawDistances(int k);
+    void drawDistances(uint k);
     void keyPressEvent(QKeyEvent *event);
+    void generateData(int nb);
 private slots:
     // SIVIA SLOT
     void drawBox(box X, int type);
-
+    void drawCircle(vector< vector< interval > > dists, int pos);
     //BUTTONS SLOT
     void on_DrawDistanceR1_clicked();
     void on_DrawDistanceR2_clicked();
@@ -44,12 +45,19 @@ private slots:
 
     void on_startTimer_clicked();
 
+    void on_contractState_clicked();
+
+    void on_drawALL_clicked();
+
+    void on_stepR1_clicked();
+
 private:
     Ui::MainWindow *ui;
     repere *Rsivia,*Rworld;
     SIVIA* sivia;
     vector<robot*> rob;
-
+    vector <vector <vector < interval> > > distances;
+    vector<box> pos;
     QTimer *timer;
 };
 

@@ -25,6 +25,7 @@ box (interval x);
 box (interval x,interval y);
 box (interval x,interval y, interval z);
 box (const box&);
+box (const box&, int deb, int fin);
 ~box ();
 interval& operator[] (int) const ;
 box& operator=(const box&);
@@ -46,6 +47,11 @@ friend box      operator*(const double,const box&);
 friend box	operator*(const box&,const interval&);
 friend ostream& operator<<(ostream&, const box&);
 friend QDebug   operator<<(QDebug, const box&);
+
+//-------------------FONCTIONS PERSO---------------------------------------
+
+box  extract(int indice, int size);
+void remplace(box &X, int indice);
 
 //-------------------FONCTIONS MEMBRES---------------------------------------
 

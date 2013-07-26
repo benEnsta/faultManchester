@@ -17,7 +17,7 @@ class repere : public QObject
 public:
     QGraphicsScene* Scene;
     double xmin,xmax,ymin,ymax;
-
+    QGraphicsView *G;
     explicit repere(QObject *parent = 0);
     repere(QObject *parent = 0,QGraphicsView* G=0,double xmin=0,double xmax=10,double ymin=0,double ymax=10);
     double xToPix(double x);
@@ -34,7 +34,7 @@ public:
     void Save(QString nom);
 
     void DrawHok(float *tab, float *angles, double x, double y, double theta);
-
+    void centerOn(double x, double y, double width = 5, double height = 5);
     void DrawHok_contract(double x, double y, double theta, vector<float> &dist, vector<float> &alpha, vector<float> &gamma, vector<bool> &contract);
 signals:
 

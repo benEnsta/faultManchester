@@ -10,6 +10,7 @@ repere::repere(QObject *parent) :
 repere::repere(QObject *parent,QGraphicsView* G,double xmin1, double xmax1,double ymin1, double ymax1) :
     QObject(parent)
 {    Scene=new QGraphicsScene(this);
+     this->G = G;
      G->setScene(Scene);
      xmin=xmin1; xmax=xmax1; ymin=ymin1; ymax=ymax1;
      Scene->setSceneRect(0,0,G->geometry().width()-3,G->geometry().height()-3);
@@ -51,6 +52,11 @@ void repere::DrawHok(float *tab,float* angles, double x, double y, double theta)
        point.push_back(QPointF(xToPix(x),yToPix(y)));
        Scene->addPolygon(point,QPen(Qt::red), QBrush(Qt::gray));
 }
+
+void repere::centerOn(double x, double y, double width, double height)
+{
+    Scene->setSceneRect(x,y,G->geometry().width()-3,G->geometry().height()-3);
+}
 //---------------------------------------------------------------------------------------------------
 void repere::DrawHok_contract(double xv, double yv, double thetav,
                               vector<float> &dist, vector<float> &alpha, vector<float> &gamma, vector<bool> &contract){
@@ -76,9 +82,9 @@ void repere::DrawArrow(double x1,double y1,double dx,double dy, double r, QPen p
         double x2=x1+dx;
         double y2=y1+dy;
         double a=3.14-1.0;
-        double px=x2+r*(cos(a)*dx-sin(a)*dy);    // coté de pointe
+        double px=x2+r*(cos(a)*dx-sin(a)*dy);    // cot de pointe
         double py=y2+r*(sin(a)*dx+cos(a)*dy);
-        double qx=x2+r*(cos(-a)*dx-sin(-a)*dy);  // autre coté de pointe
+        double qx=x2+r*(cos(-a)*dx-sin(-a)*dy);  // autre cot de pointe
         double qy=y2+r*(sin(-a)*dx+cos(-a)*dy);
         Scene->addLine(xToPix(x1),yToPix(y1),xToPix(x2),yToPix(y2),pen1);
         Scene->addLine(xToPix(x2),yToPix(y2),xToPix(px),yToPix(py),pen1);
