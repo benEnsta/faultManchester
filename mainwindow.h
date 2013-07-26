@@ -24,18 +24,12 @@ public:
     void drawDistances(uint k);
     void keyPressEvent(QKeyEvent *event);
     void generateData(int nb);
+    void drawDistances(uint k, interval *dist);
 private slots:
     // SIVIA SLOT
     void drawBox(box X, int type);
     void drawCircle(vector< vector< interval > > dists, int pos);
     //BUTTONS SLOT
-    void on_DrawDistanceR1_clicked();
-    void on_DrawDistanceR2_clicked();
-    void on_DrawDistanceR3_clicked();
-
-    void on_testR1_clicked();
-    void on_testR2_clicked();
-    void on_testR3_clicked();
 
     void on_clearButtton_clicked();
     void on_testContract2_clicked();
@@ -50,6 +44,12 @@ private slots:
     void on_drawALL_clicked();
 
     void on_stepR1_clicked();
+
+    void on_DrawCircleBtn_clicked();
+
+    void on_runTestBtn_clicked();
+
+    void on_dynLocBtn_clicked();
 
 private:
     Ui::MainWindow *ui;

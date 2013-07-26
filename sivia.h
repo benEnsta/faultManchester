@@ -43,12 +43,8 @@ public:
     void contractCircle(interval &x0, interval &y0, interval &x1, interval &y1, interval &d);
     void contractCircle(interval& x0,interval& y0, double x1, double y1, interval& d);
     void contractAll(box &X);
-    void contractAll2(box &X);
     void contractAt(box& X, vector < vector < interval> > &dists);
-    void contractRX(box &X, int r);
 
-    void contractR1(box &X);
-    void contractR2(box &X);
 
     box getResult();
     void stateEstim(box &X, vector<robot *> &robs);
@@ -74,7 +70,7 @@ signals:
     void drawRobot(box X);
     void workFinished();
 public slots:
-    void doWork(box X0);
+    void doWork(box X0, vector<vector<interval> > *dist);
 };
 
 #endif // SIVIA_H

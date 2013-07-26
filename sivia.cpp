@@ -55,9 +55,11 @@ vector<box> *diff(box X0, box X1){
     return res;
 }
 //----------------------------------------------------------------------------
-void SIVIA::doWork(box X0)
+void SIVIA::doWork(box X0, vector< vector< interval> > *dist)
 {
     Init();
+    result.clear();
+    this->dist = *dist;
     SIVIA_f(X0);
     emit workFinished();
 }
@@ -92,7 +94,6 @@ void SIVIA::getDistances(vector<robot*>& robs){
     for(uint i = 0; i < robs.size(); i++){
         for(uint j = 0; j < robs.size(); j++){
             if(i == j) continue;
-
             dist[i][j] = interval(robs[i]->getDistanceTo(robs[j]->x, robs[j]->y)) + interval(-0.05,0.05);
         }
     }
@@ -139,6 +140,7 @@ void SIVIA::Decremente(interval& X1,interval& Y1, interval& X,interval& Y,
 
 int SIVIA::SIVIA_f(box X0)
 {   list<box> L;
+    int ind= 0;
     int k=0;
     box X(X0);
     L.push_back (X);
@@ -169,7 +171,9 @@ int SIVIA::SIVIA_f(box X0)
         if (!X.IsEmpty())
         {  if (X.Width()<epsilon)
             {
+                emit drawBox(box(X[3],X[4]),6);
                 result.push_back(X);
+                ind++;
                 //qDebug() << X;
                 //Rsivia->DrawBox(X[1].inf,X[1].sup,X[2].inf,X[2].sup,QPen(Qt::red),QBrush(Qt::red));
                 //Rworld->DrawRobot(Center(X[1]),Center(X[2]),Center(X[3]),0.1);
@@ -194,7 +198,7 @@ void SIVIA::contractState(box& X){
 
     int ny = distance->size();
     int step = 2*rob->size();
-    double err[] = {0.000, 0.01, 0.001, 0.00};
+    double err[] = {0.000, 0.001, 0.001, 0.00};
     // Forward propagation
     for(int i = 1; i < ny; i++){ // i => indice du temps
         //box Xk(X[i]), Xk_1(X[i-1]);
@@ -203,18 +207,24 @@ void SIVIA::contractState(box& X){
             Incremente(X[i*step + 2*j + 1],X[i*step + 2*j + 2], X[(i-1)*step + 2*j + 1],X[(i-1)*step + 2*j + 2], r->theta_v[i],r->speed_v[i],err[j]);
         }
 
-        box tmp = X.extract(i*step, 2*rob->size());
-        //qDebug() << "avant" << tmp[3] << tmp[4];
-        contractAt(tmp,distance->at(i));
-        if(tmp.IsEmpty()) {
-            emit drawCircle(distance->at(i),i);
-            break;
-        }
-        //qDebug() << "aprés" << tmp[3] << tmp[4];
-        emit drawBox(tmp,2);
-        X.remplace(tmp,i*step);
+//        box tmp = X.extract(i*step, 2*rob->size());
+//        //qDebug() << "avant" << tmp[3] << tmp[4];
+//        //contractAt(tmp,distance->at(i));
+//        C = ROBALL;
+//        doWork(tmp,&distance->at(i));
+//        box Xr = getResult();
+//        tmp = Inter(tmp,Xr);
+//        if(tmp.IsEmpty()) {
+//            emit drawCircle(distance->at(i),i);
+//            break;
+//        }
+//        //qDebug() << "aprés" << tmp[3] << tmp[4];
+//        emit drawBox(tmp,2);
+//        X.remplace(tmp,i*step);
+
 
     }
+    //C = STATE;
 
     // Backward propagation
     for(int i = ny-1; i > 0; i--){ // i => indice du temps
@@ -253,19 +263,7 @@ void SIVIA::contractAt(box& X, vector < vector < interval > > &dists){
     //innerContract(X);
 }
 
-void SIVIA::contractAll(box& X){
-    vector<box> L;
-    for(int i = 0; i < X.dim/2; i++){
-        for(int j = 0; j < X.dim/2; j++){
-            if (i == j) continue;
-            box Xtmp(X);
-            contractCircle(Xtmp[2*i+1],Xtmp[2*i+2], Xtmp[2*j+1], Xtmp[2*j+2],   dist[i][j]);
-            L.push_back(Xtmp);
-        }
-    }
-    C_q_in(X, L.size()-N_outliers, L);
-    //innerContract(X);
-}
+
 
 void SIVIA::contractInOut(box &X){
     for(uint i = 1; i < X.dim*0.5; i++){
@@ -274,7 +272,7 @@ void SIVIA::contractInOut(box &X){
 }
 
 void SIVIA::contractInOut(box &X, vector< vector< interval> > distance){
-    for(uint i = 0; i < rob->size(); i++){
+    for(uint i = 1; i < rob->size(); i++){
         for(uint j = 0; j < rob->size(); j++){
             if(i == j) continue;
             dist[i][j] = distance[i][j];
@@ -292,18 +290,16 @@ void SIVIA::contract_and_draw(box &X, int r){
     dif = diff(box(Xold2[2*r+1],Xold2[2*r+2]) , box(X[2*r+1],X[2*r+2]));
     for(int i = 0; i  < dif->size(); i++){
         box Xt = dif->at(i);
-         emit drawBox(Xt,4);
+         //emit drawBox(Xt,4);
     }
     delete dif;
-
+    if(X.IsEmpty())return ;
     box Xold(X);
     innerContract(X,r);
-    //emit drawBox(box(Xold[2*r+1],Xold[2*r+2]),4);
     dif = diff(box(Xold[2*r+1],Xold[2*r+2]) , box(X[2*r+1],X[2*r+2]));
     for(uint i = 0; i  < dif->size(); i++){
         box Xt = dif->at(i);
-        //result1.push_back(Xt);
-        emit drawBox(Xt,3);
+        //emit drawBox(Xt,3);
     }
     delete dif;
 
@@ -320,7 +316,7 @@ void SIVIA::contractReccord(box &X){
 
 void SIVIA::innerContract(box &X, int r){
     vector<box> L;
-    for(int i = 1; i < X.dim*0.5; i++){
+    for(int i = 0; i < X.dim*0.5; i++){
             if (i == r) continue;
             box X1(X[2*r+1],X[2*r+2]), X2(X1);
             box X01(X), X02(X);
@@ -352,104 +348,6 @@ void SIVIA::outerContract(box& X, int r){
     X[2*r+2] = b0[2];
 }
 
-void SIVIA::contractAll2(box& X){
-    //vector<box> L;
-    box X1(X);
-    for(int i = 1; i < X.dim/2; i++){
-        contractRX(X,i);
-    }
-
-}
-
-void SIVIA::contractR2(box& X){
-    box b0 = box(X[5],X[6]);
-    box b1 = box(X[5],X[6]);
-    box b2 = box(X[5],X[6]);
-    box b3 = box(X[5],X[6]);
-    box b4 = box(X[5],X[6]);
-    box b5 = box(X[5],X[6]);
-    box b6 = box(X[5],X[6]);
-    vector<box> L;
-
-
-    contractCircle(X[1],X[2], b1[1], b1[2],   dist[0][2]);
-    L.push_back(b1);
-
-    contractCircle(b2[1], b2[2], X[1], X[2],  dist[2][0]);
-    L.push_back(b2);
-
-    contractCircle(b3[1], b3[2], X[3],X[4],   dist[1][2]);
-    L.push_back(b3);
-
-    //contractCircle(X[5],X[6], X[1],X[2],  dist[2][0]);
-    contractCircle(X[3],X[4], b4[1], b4[2],   dist[2][1]);
-    L.push_back(b4);
-
-    contractCircle(X[7],X[8], b5[1], b5[2],   dist[3][2]);
-    L.push_back(b5);
-
-    contractCircle(X[7],X[8], b6[1], b6[2],   dist[2][3]);
-    L.push_back(b6);
-
-
-    C_q_in(b0, L.size(), L);
-    //b0 = Inter(b2, b3);
-    //b0 = b2;
-    X[5] = b0[1];
-    X[6] = b0[2];
-
-
-}
-
-void SIVIA::contractR1(box& X){
-    box b0 = box(X[3],X[4]);
-    box b1 = box(X[3],X[4]);
-    box b2 = box(X[3],X[4]);
-    box b3 = box(X[3],X[4]);
-    box b4 = box(X[3],X[4]);
-    box b5 = box(X[3],X[4]);
-    vector<box> L;
-
-
-    contractCircle(X[1],X[2], b1[1], b1[2],  dist[0][1]);
-    L.push_back(b1);
-
-    contractCircle(b2[1], b2[2], X[1], X[2],  dist[1][0]);
-    L.push_back(b2);
-
-    contractCircle(b3[1], b3[2], X[5],X[6],  dist[1][2]);
-    L.push_back(b3);
-
-    //contractCircle(X[5],X[6], X[1],X[2],  dist[2][0]);
-    contractCircle(X[5],X[6], b4[1], b4[2],  dist[2][1]);
-    L.push_back(b4);
-
-    contractCircle(X[7],X[8], b5[1], b5[2],  dist[3][1]);
-    L.push_back(b5);
-
-    C_q_in(b0, L.size(), L);
-    //b0 = Inter(b2, b3);
-    //b0 = b2;
-    X[3] = b0[1];
-    X[4] = b0[2];
-
-
-}
-
-void SIVIA::contractRX(box& X, int r){
-    vector<box> L;
-    for(int i = 0; i < X.dim*0.5; i++){
-        if(i == r) continue;
-        box b1 = box(X[2*r+1],X[2*r+2]);
-        contractCircle(X[2*i+1],X[2*i+2], b1[1], b1[2],  dist[i][r]);
-        L.push_back(b1);
-    }
-    box b0 = box(X[2*r+1],X[2*r+2]);
-    C_q_in(b0, L.size()-N_outliers, L);
-}
-
-
-
 void SIVIA::contractCircle(interval& x0,interval& y0, interval& x1, interval& y1, interval& d){
 
 
@@ -473,6 +371,7 @@ void SIVIA::contractCircle(interval& x0,interval& y0, interval& x1, interval& y1
 
 void SIVIA::contractCircle(interval& x0,interval& y0, double x1, double y1, interval& d){
 
+    //qDebug() << "version avec centre double";
 
     // Contractor : (x0-x1)^2+(y0-y1)^2 = d^2
     interval dx=x0 - x1;
@@ -496,9 +395,17 @@ box SIVIA::getResult(){
     if(result.size() == 0) return box();
     box res = result[result.size()-1];
     for(int i= 0; i < result.size(); i++){
+        for(int j = 1; j <= 8 ; j++){
+            box b = result.at(i);
+            if(b[j].inf == -999){
+                qDebug() << "empty restult "<< i <<" " << result[i] << "----------------";
+                break;
+            }
+        }
+
         res = Union(res,result[i]);
     }
-    qDebug()<< result[result.size()-1];
+    qDebug()<< res;//result[result.size()-1];
     drawBox(res,0);
     return res;
 }
