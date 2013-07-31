@@ -56,7 +56,7 @@
      <double>0.010000000000000</double>
     </property>
     <property name="maximum">
-     <double>1.000000000000000</double>
+     <double>2.500000000000000</double>
     </property>
     <property name="singleStep">
      <double>0.100000000000000</double>
@@ -231,6 +231,29 @@
     </property>
     <property name="text">
      <string>Dyn loc</string>
+    </property>
+   </widget>
+   <widget class="QScrollBar" name="resultBar">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>610</y>
+      <width>361</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="resultBox">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>580</y>
+      <width>60</width>
+      <height>27</height>
+     </rect>
     </property>
    </widget>
   </widget>

@@ -139,7 +139,7 @@ public:
 
     friend iboolean TestDiskExists(const interval& X,const interval& Y,const interval& P1,const interval& P2,const interval& P3);
     friend iboolean TestDiskForall(const interval& X,const interval& Y,const interval& P1,const interval& P2,const interval& P3);
-
+    friend void CdiskExists(interval& X,interval& Y,const interval& P1,const interval& P2,const interval& P3, bool outer);
 
     //--------------------------------------------------------------------------
     //    PRIMITIF CONTRACTORS FOR (SIN, COS, PLUS, EXP, ...)

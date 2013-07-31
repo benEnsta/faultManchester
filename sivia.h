@@ -32,6 +32,8 @@ public:
     vector< vector <interval> > dist;
     vector<box> result;
     vector<box> result1;
+    vector<box> incr;
+    vector<box> cont;
     vector<robot*> *rob;
     vector< vector< vector<interval> > > *distance;
 
@@ -66,7 +68,7 @@ protected:
 signals:
 
     void drawBox(box X,int type);
-    void drawCircle(vector< vector< interval > > dists, int pos);
+    void drawCircle(int pos);
     void drawRobot(box X);
     void workFinished();
 public slots:

@@ -625,7 +625,62 @@ iboolean TestDiskForall(const interval& X,const interval& Y,const interval& P1,c
     dedans2=In(Z1-P3.inf*P3.inf,interval(0,oo));
     return (dedans1&&dedans2);
 };
+//----------------------------------------------------------------------
+void CdiskExists(interval& X,interval& Y,const interval& P1,const interval& P2,const interval& P3, bool outer)
+         // Contractor for the constraint :  Exists p1 in P1, p2  in P2. If outer=false (resp. true) : inner (resp. outer) contractor
+{     interval P3inf2=P3.inf*P3.inf;
+      interval P3sup2=P3.sup*P3.sup;
 
+     /* step 1  */ interval A1=X-P1.inf;
+     /* step 2  */ interval B1=X-P1.sup;
+     /* step 3  */ interval A2=Y-P2.inf;
+     /* step 4  */ interval B2=Y-P2.sup;
+     /* step 5  */ interval A12=Sqr(A1);
+     /* step 6  */ interval A22=Sqr(A2);
+     /* step 7  */ interval B12=Sqr(B1);
+     /* step 8  */ interval B22=Sqr(B2);
+     /* step 9  */ interval B1A1=B1*A1;
+     /* step 10 */ interval MinB12A12=Min(B12,A12);
+     /* step 11 */ interval B2A2 = B2*A2;
+     /* step 12 */ interval MinB22A22= Min(B22,A22);
+     /* step 13 */ interval MaxB12A12 = Max(B12,A12);
+     /* step 14 */ interval MaxB22A22 = Max(B22,A22);
+     /* step 15 */ interval S11 = Step(B1A1);
+     /* step 16 */ interval S22 = Step(B2A2);
+     /* step 17 */ interval Z11 = S11*MinB12A12;
+     /* step 18 */ interval Z22 = S22*MinB22A22;
+     /* step 19 */ interval Z1 = Z11 + Z22;
+     /* step 20 */ interval Z2 = MaxB12A12 + MaxB22A22;
+     /* step 21 */ interval D1=Min(Z2,P3sup2);
+     /* step 22 */ interval D2=Max(Z1,P3inf2);
+     interval R;
+     if (outer==false) R=interval(0,+oo); else R=interval(-oo,0);
+     /* step 23  */ Cmoins(R,D1,D2,1);
+
+     Cmoins(R,D1,D2,-1);                    /* step 23 */
+     Cmax(D2,Z1,P3inf2,-1);                  /* step 22 */ //D2=Max(Z1,P3inf2);
+     Cmin(D1,Z2,P3sup2,-1);                  /* step 21 */ // D1=Min(Z2,P3sup2);
+     Cplus(Z2, MaxB12A12, MaxB22A22, -1);    /* step 20 */ // Z2 = MaxB12A12 + MaxB22A22;
+     Cplus(Z1,Z11,Z22, -1);                  /* step 19 */ // Z1 = Z11 + Z22;
+     Cprod(Z22,S22,MinB22A22, -1);           /* step 18 */ // Z22 = S22*MinB22A22;
+     Cprod(Z11,S11,MinB12A12, -1);           /* step 17 */ // Z11 = S11*MinB12A12;
+     Cstep(S22,B2A2,-1);                     /* step 16 */ // S22 = Step(B2A2);
+     Cstep(S11,B1A1,-1);                     /* step 15 */ // S11 = Step(B1A1);
+     Cmax(MaxB22A22,B22, A22, -1);           /* step 14 */ // MaxB22A22 = Max(B22,A22);
+     Cmax(MaxB12A12,B12, A12, -1);           /* step 13 */ // MaxB12A12 = Max(B12,A12);
+     Cmin(MinB22A22,B22,A22,-1);             /* step 12 */ // MinB22A22= Min(B22,A22);
+     Cprod(B2A2,B2,A2, -1);                  /* step 11 */ // B2A2 = B2*A2;
+     Cmin(MinB12A12,B12,A12,-1);             /* step 10 */ // MinB12A12=Min(B12,A12);
+     Cprod(B1A1,B1,A1, -1);                  /* step 9  */ // B1A1=B1*A1;
+     Csqr(B22,B2,-1);                        /* step 8  */ // B22=Sqr(B2);
+     Csqr(B12,B1,-1);                        /* step 7  */ // B12=Sqr(B1);
+     Csqr(A22,A2,-1);                        /* step 6  */ // A22=Sqr(A2);
+     Csqr(A12,A1,-1);                        /* step 5  */ // A12=Sqr(A1);
+     Y = Inter(Y,B2 + P2.sup);               /* step 4  */ // B2=Y-P2.sup;
+     Y = Inter(Y,A2 + P2.inf);               /* step 3  */ // A2=Y-P2.inf;
+     X = Inter(X,B1 + P1.sup);               /* step 2  */ // B1=X-P1.sup;
+     X = Inter(X,A1 + P1.inf);               /* step 1  */ // A1=X-P1.inf;
+}
 
 //----------------------------------------------------------------------
 //**********************************************************************

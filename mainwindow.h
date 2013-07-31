@@ -25,10 +25,11 @@ public:
     void keyPressEvent(QKeyEvent *event);
     void generateData(int nb);
     void drawDistances(uint k, interval *dist);
+    void drawBox(box X, QPen pen);
 private slots:
     // SIVIA SLOT
     void drawBox(box X, int type);
-    void drawCircle(vector< vector< interval > > dists, int pos);
+    void drawCircle(int pos);
     //BUTTONS SLOT
 
     void on_clearButtton_clicked();
@@ -51,6 +52,10 @@ private slots:
 
     void on_dynLocBtn_clicked();
 
+    void on_resultBar_sliderMoved(int position);
+
+    void on_resultBar_valueChanged(int position);
+
 private:
     Ui::MainWindow *ui;
     repere *Rsivia,*Rworld;
@@ -58,6 +63,7 @@ private:
     vector<robot*> rob;
     vector <vector <vector < interval> > > distances;
     vector<box> pos;
+    box Xc;
     QTimer *timer;
 };
 
