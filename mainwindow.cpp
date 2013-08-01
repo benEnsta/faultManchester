@@ -37,9 +37,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->selectRob->addItem("Robot 2");
     rob.push_back(new robot(-2.5,-4.5));
     ui->selectRob->addItem("Robot 3");
-    //rob.push_back(new robot(-2.5,3.5));
-    //rob.push_back(new robot(-4.5,-4.7));
-    //rob.push_back(new robot(4.5,-3.5));
+    rob.push_back(new robot(-2.5,3.5));
+    rob.push_back(new robot(-4.5,-4.7));
+    rob.push_back(new robot(4.5,-3.5));
+    ui->spinBox->setMaximum(rob.size()-1);
     drawRobots();
 
 }
@@ -110,21 +111,11 @@ void MainWindow::drawBox(box X, int type)
     case 6:
         Rworld->DrawBox(X[1].inf,X[1].sup,X[2].inf,X[2].sup,QPen(Qt::yellow),QBrush(Qt::NoBrush));
         break;
-    case 7:
-        for(uint i = 0; i < ui->nbStep->value(); i++){
-            int step = 2*rob.size();
-            for(int j = 0; j < rob.size() ; j++){
-
-//                Rsivia->DrawBox(X[i*step + 2*j +1].inf,X[i*step + 2*j +1].sup,
-//                                X[i*step + 2*j +2].inf,X[i*step + 2*j +2].sup,
-//                                color[j],QBrush(Qt::NoBrush));
-            }
-        }
-        box++;
+    case 8:
+        Rworld->DrawBox(X[1].inf,X[1].sup,X[2].inf,X[2].sup,QPen(Qt::darkBlue),QBrush(Qt::NoBrush));
         break;
-    }
-
     //Rsivia->DrawBox(X[1].inf,X[1].sup,X[2].inf,X[2].sup,pen, brush);
+    }
 }
 
 void MainWindow::drawCircle(int pos)
@@ -172,33 +163,37 @@ void MainWindow::on_clearButtton_clicked()
 void MainWindow::on_testContract2_clicked()
 {
     box X0(2*rob.size());
-    double eps = 0.1;
-    X0[1] = interval(rob[0]->x,rob[0]->x) + interval(-0.001, 0.001);
-    X0[2] = interval(rob[0]->y,rob[0]->y) + interval(-0.001, 0.001);
 
-    for(uint i = 1; i < rob.size(); i++){
-        X0[2*i+1] = interval(rob[i]->x,rob[i]->x) + interval(-eps, eps);
-        X0[2*i+2] = interval(rob[i]->y,rob[i]->y) + interval(-eps, eps);
+    // Initialize box
+    double err[] = {0.05, 0.5, 0.5, 0.3,0.2,0.1,0.5};
+    for(uint i = 0; i < rob.size(); i++){
+        X0[2*i+1] = interval(rob[i]->x,rob[i]->x) + interval(-err[i], err[i]);
+        X0[2*i+2] = interval(rob[i]->y,rob[i]->y) + interval(-err[i], err[i]);
+    }
+    //int indice  = ui->selectRob->currentIndex();
+    box tmp(X0[3],X0[4]);
+
+    //X0[3] = interval(xmin, xmax);
+    //X0[4] = interval(ymin, ymax);
+
+    // Initialize distances
+    vector< vector<interval> > dist(rob.size(),vector<interval> (rob.size()));
+    for(uint i = 0; i < rob.size(); i++){
+        for(uint j = 0; j < rob.size(); j++){
+            if(i == j) continue;
+            //if(i == 2 && j == 1)
+                //dist[i][j] = interval(rob[i]->getDistanceTo(rob[j]->x, rob[j]->y)) + interval(+2,+3);
+            //else
+                dist[i][j] = interval(rob[i]->getDistanceTo(rob[j]->x, rob[j]->y)) + interval(-0.1,0.1);
+        }
     }
 
-    X0[3] = interval(rob[1]->x,rob[1]->x) + interval(-50*eps, 50*eps);
-    X0[4] = interval(rob[1]->y,rob[1]->y) + interval(-50*eps, 50*eps);
-    //    for(uint i = 1; i < rob.size(); i++){
-    //        Rworld->DrawBox(X0[2*i+1].inf,X0[2*i+1].sup,X0[2*i+2].inf,X0[2*i+2].sup,QPen(Qt::black),QBrush(Qt::NoBrush));
-    //    }
     sivia->epsilon = ui->EpsilonSpinBox->value();
-    sivia->getDistances(rob);
-    sivia->C = ROBALL;
-    //sivia->doWork(X0);
-    //box R = sivia->getResult();
-    for(uint i = 0; i < sivia->result1.size(); i++){
-        box b = sivia->result1[i];
-        Rworld->DrawBox(b[1].inf,b[1].sup,b[2].inf,b[2].sup,QPen(Qt::magenta),QBrush(Qt::NoBrush));
-    }
-    box Xt = Union(sivia->result1);
-    //Rworld->DrawBox(Xt[1].inf,Xt[1].sup,Xt[2].inf,Xt[2].sup,QPen(Qt::black),QBrush(Qt::black));
+    sivia->doContractOneByOne(X0,&dist);
 
-    Rworld->Save("ImageALL");
+    Rworld->Save("ImageR2");
+    //drawBox(tmp,QPen(Qt::green));
+    //Rworld->DrawBox(tmp[1].inf, tmp[1].sup,tmp[2].inf, tmp[2].sup, QPen(Qt::black), QBrush(Qt::NoBrush));
 }
 
 
@@ -234,23 +229,10 @@ void MainWindow::generateData(int nb0){
 
 
 void MainWindow::clock(){
-//    Rworld->Clean();
-//    for(uint i = 0; i < rob.size(); i++){
-
-//        rob[i]->Clock(0,0);
-
-//    }
-//    t = t+ dt;
-//    sivia->stateEstim(Xest,rob);
-//    for(uint i = 1; i < rob.size(); i++){
-//        Rsivia->DrawBox(Xest[2*i+1].inf,Xest[2*i+1].sup,Xest[2*i+2].inf,Xest[2*i+2].sup,QPen(Qt::red),QBrush(Qt::NoBrush));
-//    }
-//    qDebug(" t %f",t);
-//    drawRobots();
-
     on_stepR1_clicked();
-
 }
+
+
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {   switch (event->key())
     {
@@ -260,6 +242,8 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_S: u2=u2-0.1;          break;
     }
 }
+
+
 void MainWindow::on_startTimer_clicked()
 {
     if(!timer->isActive()){
@@ -374,9 +358,13 @@ void MainWindow::on_DrawCircleBtn_clicked()
     vector<interval> dist(rob.size());
     for(uint j = 0; j < rob.size(); j++){
         if(indice == j) continue;
-        dist[j] = interval(rob[indice]->getDistanceTo(rob[j]->x, rob[j]->y)) + interval(-0.1,0.1);
+        if(sivia->dist.size() > 0){
+            dist[j] = sivia->dist[indice][j];
+        } else
+            dist[j] = interval(rob[indice]->getDistanceTo(rob[j]->x, rob[j]->y)) + interval(-0.1,0.1);
     }
-    drawDistances(indice, &dist.at(0));
+    drawDistances(indice, &dist[0]);
+    //drawCircle(indice);
     dist.clear();
 }
 
@@ -399,7 +387,7 @@ void MainWindow::on_runTestBtn_clicked()
     for(uint i = 0; i < rob.size(); i++){
         for(uint j = 0; j < rob.size(); j++){
             if(i == j) continue;
-            dist[i][j] = interval(rob[i]->getDistanceTo(rob[j]->x, rob[j]->y)) + interval(-0.2,0.2);
+            dist[i][j] = interval(rob[i]->getDistanceTo(rob[j]->x, rob[j]->y)) + interval(-0.1,0.1);
         }
     }
     switch(indice){
@@ -407,6 +395,7 @@ void MainWindow::on_runTestBtn_clicked()
         case 2: sivia->C = ROB2; break;
         case 3: sivia->C = ROB3; break;
     }
+    //sivia->doWork(X0,&dist);
     sivia->doWork(X0,&dist);
     Rworld->Save("ImageR2");
 }
@@ -422,19 +411,18 @@ void MainWindow::on_dynLocBtn_clicked()
         X0[2*i+1] = interval(rob[i]->x,rob[i]->x) + interval(-err[i], err[i]);
         X0[2*i+2] = interval(rob[i]->y,rob[i]->y) + interval(-err[i], err[i]);
     }
-    //int indice  = ui->selectRob->currentIndex();
-    //X0[2*indice+1] = interval(xmin, xmax);
-    //X0[2*indice+2] = interval(ymin, ymax);
 
-    sivia->epsilon = ui->EpsilonSpinBox->value();
 
     vector< vector<interval> > dist(rob.size(),vector<interval> (rob.size()));
     for(uint i = 0; i < rob.size(); i++){
         for(uint j = 0; j < rob.size(); j++){
             if(i == j) continue;
-            dist[i][j] = interval(rob[i]->getDistanceTo(rob[j]->x+0.05, rob[j]->y)) + interval(-0.1,0.1);
+            dist[i][j] = interval(rob[i]->getDistanceTo(rob[j]->x, rob[j]->y)) + interval(-0.1,0.1);
         }
     }
+    drawBox(X0,QPen(Qt::darkGreen));
+
+    sivia->epsilon = ui->EpsilonSpinBox->value();
     sivia->C = ROBALL;
     sivia->doWork(X0,&dist);
     sivia->getResult();
@@ -461,4 +449,9 @@ void MainWindow::on_resultBar_valueChanged(int position)
     }
     sivia->reccordNumber = position;
     ui->resultBox->setValue(position);
+}
+
+void MainWindow::on_spinBox_editingFinished()
+{
+    sivia->N_outliers = ui->spinBox->value();
 }

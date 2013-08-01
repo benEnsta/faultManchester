@@ -56,6 +56,8 @@ private slots:
 
     void on_resultBar_valueChanged(int position);
 
+    void on_spinBox_editingFinished();
+
 private:
     Ui::MainWindow *ui;
     repere *Rsivia,*Rworld;

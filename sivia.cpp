@@ -2,62 +2,24 @@
 
 // Global Variable
 extern double dt;
+vector<box> *diff(box X0, box X1);
+void diffI(interval &x0, interval &x1, interval &c0, interval &c1);
+
 
 SIVIA::SIVIA() : QObject()
 {
 
     C = ROB1;
     m = 3;
-    N_outliers = 2;
+    N_outliers = 0;
     reccordNumber = 0;
+    contractor = &SIVIA::contract_and_draw;
 }
 
 SIVIA::~SIVIA(){
 }
 
-//----------------------------------------------------------------------
-void diffI(interval &x0, interval &x1, interval &c0, interval &c1){
-    interval xt = Inter(Inter(x0, x1)-x1,interval(0,0));
-    if(x1.isEmpty || xt.isEmpty){
-        c0 = interval(); c1 = interval();
-    } else {
-        c0 = (x1.inf == x0.inf) ? interval() :  interval(x1.inf,x0.inf);
-        c1 = (x0.sup == x1.sup) ? interval() :  interval(x0.sup,x1.sup);
-    }
 
-}
-
-vector<box> *diff(box X0, box X1){
-    vector<box> *res = new vector<box>();
-    if(X1.IsEmpty()){
-        res->push_back(X0);
-        return res;
-    }
-    interval cx1, cx2, cy1, cy2;
-    diffI(X0[1],X1[1],cx1, cx2);
-    diffI(X0[2],X1[2],cy1, cy2);
-
-    if(cx1.inf != cx1.sup && !cx1.isEmpty && !X0[2].isEmpty) res->push_back(box(cx1,interval(X0[2])));
-    if(cx2.inf != cx2.sup && !cx2.isEmpty && !X0[2].isEmpty) res->push_back(box(cx2,interval(X0[2])));
-
-    if(cx1.isEmpty && cx2.isEmpty){
-        if(cy1.inf != cy1.sup && !cy1.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(X0[1]),cy1));
-        if(cy2.inf != cy2.sup && !cy2.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(X0[1]),cy2));
-    } else if(!cx1.isEmpty && !cx2.isEmpty){
-        if(cy1.inf != cy1.sup && !cy1.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(cx1.sup,cx2.inf),cy1));
-        if(cy2.inf != cy2.sup && !cy2.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(cx1.sup,cx2.inf),cy2));
-    } else if(!cx1.isEmpty && cx2.isEmpty){
-        if(cy1.inf != cy1.sup && !cy1.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(cx1.sup,X0[1].sup),cy1));
-        if(cy2.inf != cy2.sup && !cy2.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(cx1.sup,X0[1].sup),cy2));
-    } else if(cx1.isEmpty && !cx2.isEmpty) {
-        if(cy1.inf != cy1.sup && !cy1.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(X0[1].inf,cx2.inf),cy1));
-        if(cy2.inf != cy2.sup && !cy2.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(X0[1].inf,cx2.inf),cy2));
-    }else{
-        qDebug("cas non repertorier");
-    }
-    return res;
-}
-//----------------------------------------------------------------------------
 void SIVIA::doWork(box X0, vector< vector< interval> > *dist)
 {
     Init();
@@ -66,7 +28,6 @@ void SIVIA::doWork(box X0, vector< vector< interval> > *dist)
     SIVIA_f(X0);
     emit workFinished();
 }
-
 
 void SIVIA::doContractState(box X0, vector<robot*> *rob, vector<vector<vector<interval> > > *distance)
 {
@@ -88,28 +49,42 @@ void SIVIA::doStepR1(box X0, vector<robot*> *rob, vector<vector<vector<interval>
     emit workFinished();
 }
 
+
+void SIVIA::doContractOneByOne(box &X, vector< vector< interval> > *dist){
+    Init();
+    result.clear();
+    P0.clear();
+    this->dist = *dist;
+    // Copy initial position.
+    for(uint i = 0; i < X.dim*0.5; i++){
+        P0.push_back(box(X[2*i+1],X[2*i+2]));
+    }
+
+    currentRob = 1;
+    // DO sivia for each Robot.
+    //for(uint j = 0; j < 10; j++){
+        currentRob = 1;
+        for(uint i = 1; i < P0.size(); i++){
+            C = ROBUNIT;
+            result.clear();
+            box X0(X[2*i+1],X[2*i+2]);
+            SIVIA_f(X0);
+            box Xr = getResult();
+            emit drawBox(Xr, 8);
+            //P0[i] = Inter(P0[i],Xr);
+            emit drawBox(P0[i], 6);
+            currentRob++;
+        }
+   // }
+
+
+}
+
 void SIVIA::Init()
 {
 
 }
 
-void SIVIA::getDistances(vector<robot*>& robs){
-    dist.resize(rob->size(), vector < interval> (rob->size()));
-    for(uint i = 0; i < robs.size(); i++){
-        for(uint j = 0; j < robs.size(); j++){
-            if(i == j) continue;
-            dist[i][j] = interval(robs[i]->getDistanceTo(robs[j]->x, robs[j]->y)) + interval(-0.05,0.05);
-        }
-    }
-}
-
-void SIVIA::stateEstim(box& X,vector<robot*> &robs){
-    for(uint i = 0; i < robs.size(); i++){
-        X[2*i+1] = X[2*i+1] + dt*robs[i]->vit*cos(robs[i]->theta) + interval(-0.001, 0.001);
-        X[2*i+2] = X[2*i+2] + dt*robs[i]->vit*sin(robs[i]->theta) + interval(-0.001, 0.001);
-    }
-    //emit drawBox(X,1);
-}
 
 //---------------------------------------------------------------------------
 void SIVIA::Incremente(box& X0,box X, double theta, double vit){
@@ -150,7 +125,7 @@ int SIVIA::SIVIA_f(box X0)
     L.push_back (X);
     while ( !L.empty() )
     {   k++;
-        qDebug()<<"k="<<k<< "box width "<< X.Width();// <<"Axe princ " << AxePrincipal(X) ;
+        qDebug()<<"k="<<k<< "box width "<< X.Width() <<"Axe princ " << AxePrincipal(X) ;
         X=L.front();   L.pop_front();
         //emit drawBox(X,1);
         bool sortie=false;
@@ -162,6 +137,7 @@ int SIVIA::SIVIA_f(box X0)
                 case ROB1: contract_and_draw(X,1); break;
                 case ROB2: contract_and_draw(X,2); break;
                 case ROB3: contract_and_draw(X,3); break;
+            case ROBUNIT: (this->*contractor)(X,0); break;
                 case ROBALL: contractInOut(X); break;
                 case STATE: contractState(X); break;
                 case STEPR1: contractReccord(X);
@@ -175,12 +151,9 @@ int SIVIA::SIVIA_f(box X0)
         if (!X.IsEmpty())
         {  if (X.Width()<epsilon)
             {
-                emit drawBox(box(X[3],X[4]),6);
+                emit drawBox(box(X[1],X[2]),6);
                 result.push_back(X);
                 ind++;
-                //qDebug() << X;
-                //Rsivia->DrawBox(X[1].inf,X[1].sup,X[2].inf,X[2].sup,QPen(Qt::red),QBrush(Qt::red));
-                //Rworld->DrawRobot(Center(X[1]),Center(X[2]),Center(X[3]),0.1);
             }
             else
             {   box X1(2);  box X2(2);
@@ -195,6 +168,20 @@ int SIVIA::SIVIA_f(box X0)
     emit drawBox(X,7);
     //Rsivia->Save("paving");
     return 0;
+}
+//------------------------------------------------------------------------
+void SIVIA::contractInOut(box &X){
+    for(uint i = 1; i < X.dim*0.5; i++){
+        contract_and_draw(X,i);
+    }
+}
+
+void SIVIA::contractReccord(box &X){
+    dist = distance->at(reccordNumber);
+    qDebug("Contract");
+    for(uint i = 0; i < X.dim*0.5; i++){
+        contract_and_draw(X,i);
+    }
 }
 
 
@@ -225,7 +212,6 @@ void SIVIA::contractState(box& X){
         //qDebug() << "avant" << tmp[3] << tmp[4];
         //contractAt(tmp,distance->at(i));
 
-
         C = ROBALL;
         doWork(tmp,&distance->at(i));
         box Xr = getResult();
@@ -255,88 +241,40 @@ void SIVIA::contractState(box& X){
 
 }
 
-void SIVIA::contractAt(box& X, vector < vector < interval > > &dists){
-
-    dist = dists;
-    for(uint i = 1; i < X.dim*0.5; i++){
-        outerContract(X,i);
-    }
-//    vector<box> L;
-//    for(int i = 0; i < X.dim/2; i++){
-//        for(int j = 1; j < X.dim*0.5; j++){
-//            if (i == j) continue;
-//            box Xtmp(X);
-//            contractCircle(Xtmp[2*i+1],Xtmp[2*i+2], Xtmp[2*j+1], Xtmp[2*j+2],   dists[i][j]);
-//            L.push_back(Xtmp);
-//        }
-//    }
-//    for(int i = 0; i < L.size(); i++){
-//        qDebug() << L[i][4];
-//    }
-//    C_q_in(X, L.size()-N_outliers, L);
-    //emit drawBox(X,2);
-    //qDebug("contrct");
-//    for(int i = 0; i < dists.at(1).size(); i++){
-//        for(int j = 0; j < dists.at(1).size(); j++){
-//            dist[i][j] = dists[i][j];
-//        }
-//    }
-
-//    contract_and_draw(X,1);
-    //innerContract(X);
-}
-
-
-
-void SIVIA::contractInOut(box &X){
-    for(uint i = 1; i < X.dim*0.5; i++){
-        contract_and_draw(X,i);
-    }
-}
-
-void SIVIA::contractInOut(box &X, vector< vector< interval> > distance){
-    for(uint i = 1; i < rob->size(); i++){
-        for(uint j = 0; j < rob->size(); j++){
-            if(i == j) continue;
-            dist[i][j] = distance[i][j];
-        }
-    }
-    for(uint i = 1; i < X.dim*0.5; i++){
-        contract_and_draw(X,i);
-    }
-}
-
 void SIVIA::contract_and_draw(box &X, int r){
     vector<box>* dif;
     box Xold2(X);
-    outerContract(X,r);
+    if(r == 0)
+        outerContractOne(X);
+    else
+        outerContractAll(X);
     dif = diff(box(Xold2[2*r+1],Xold2[2*r+2]) , box(X[2*r+1],X[2*r+2]));
     for(int i = 0; i  < dif->size(); i++){
         box Xt = dif->at(i);
-         emit drawBox(Xt,4);
+        //emit drawBox(Xt,4);
     }
     delete dif;
     if(X.IsEmpty())return ;
     box Xold(X);
-    innerContract(X,r);
+    if(r == 0){
+        innerContractOne(X);
+        if (X.IsEmpty())  result.push_back(X);
+    } else {
+        innerContractAll(X);
+    }
     dif = diff(box(Xold[2*r+1],Xold[2*r+2]) , box(X[2*r+1],X[2*r+2]));
     for(uint i = 0; i  < dif->size(); i++){
         box Xt = dif->at(i);
-        emit drawBox(Xt,3);
+        //emit drawBox(Xt,3);
     }
     delete dif;
 
 }
 
 
-void SIVIA::contractReccord(box &X){
-    dist = distance->at(reccordNumber);
-    qDebug("Contract");
-    for(uint i = 0; i < X.dim*0.5; i++){
-        contract_and_draw(X,i);
-    }
-}
-
+//-----------------------------------------------------------------
+//-------------------  CONTRACTOR           -----------------------
+//-----------------------------------------------------------------
 void SIVIA::innerContract(box &X, int r){
 
     vector<box> L;
@@ -346,26 +284,14 @@ void SIVIA::innerContract(box &X, int r){
         box X1(box(X[2*r+1],X[2*r+2]));
         interval i1(dist[r][i]);
         CdiskExists(X1[1],X1[2],C00[1],C00[2],i1,true);
-        L.push_back(X1);
+        if(X1.IsEmpty()) L.push_back(box(X[2*r+1],X[2*r+2]));
+        else
+            L.push_back(X1);
     }
-    //C_q_in(X,N_outliers +1 ,L);
 
-//    vector<box> L;
-//    for(int i = 0; i < X.dim*0.5; i++){
-//            if (i == r) continue;
-//            box X1(X[2*r+1],X[2*r+2]), X2(X1);
-//            box X01(X), X02(X);
-//            interval dmoins(0,dist[i][r].inf);
-//            interval d(dist[i][r]);
-//            interval dplus(dist[i][r].sup, +oo);
-//            CdiskExists(X1[1], X1[2], X01[2*i+1], X01[2*i+2],  d, true);
-//            //contractCircle(X1[1], X1[2], Center(X01[2*i+1]),Center(X01[2*i+2]),   dmoins);
-//            //contractCircle(X2[1], X2[2], Center(X02[2*i+1]),Center(X02[2*i+2]),    dplus);
-//            L.push_back(X1);
-//    }
     box b0 = box(X[2*r+1],X[2*r+2]);
     C_q_in(b0, N_outliers + 1 , L);
-    //b0 = Union(L);
+
     X[2*r+1] = b0[1];
     X[2*r+2] = b0[2];
 }
@@ -382,13 +308,6 @@ void SIVIA::outerContract(box& X, int r){
         L.push_back(X1);
     }
 
-//    for(int i = 0; i < X.dim*0.5; i++){
-//        if(i == r) continue;
-//        box b1(X[2*r+1],X[2*r+2]);
-//        //contractCircle(b1[1], b1[2], Center(X[2*i+1]), Center(X[2*i+2]),  dist[i][r]);
-//        CdiskExists(b1[1], b1[2], X[2*i+1], X[2*i+2],  dist[i][r], false);
-//        L.push_back(b1);
-//    }
     box b0 = box(X[2*r+1],X[2*r+2]);
     C_q_in(b0, L.size()-N_outliers, L);
 
@@ -396,6 +315,77 @@ void SIVIA::outerContract(box& X, int r){
     X[2*r+2] = b0[2];
 }
 
+//-----------------------------------------------------------------
+//-------------------  CONTRACTOR ALL      -----------------------
+//-----------------------------------------------------------------
+
+void SIVIA::outerContractAll(box& X){
+
+    vector<box> L;
+    for(uint r = 0; r < 0.5*X.dim; r++){
+        for(uint i = 0; i < 0.5*X.dim; i++){
+            if(i == r) continue;
+            box X1(X);
+            interval i1(dist[r][i]);
+            CdiskExists(X1[2*r+1],X1[2*r+2],X1[2*i+1],X1[2*i+2],i1,false);
+            L.push_back(X1);
+        }
+    }
+    C_q_in(X, L.size()-N_outliers, L);
+}
+
+void SIVIA::innerContractAll(box& X){
+
+    vector<box> L;
+    for(uint r = 0; r < 0.5*X.dim; r++){
+        for(uint i = 0; i < 0.5*X.dim; i++){
+            if(i == r) continue;
+            box X1(X);
+            interval i1(dist[r][i]);
+            CdiskExists(X1[2*r+1],X1[2*r+2],X1[2*i+1],X1[2*i+2],i1,true);
+            L.push_back(X1);
+        }
+    }
+    C_q_in(X, N_outliers +1, L);
+}
+
+
+//-----------------------------------------------------------------
+//-------------------  CONTRACTOR ONE      -----------------------
+//-----------------------------------------------------------------
+
+void SIVIA::outerContractOne(box& X){
+
+    vector<box> L;
+
+    for(uint i = 0; i < P0.size(); i++){
+        if(i == currentRob) continue;
+        box X1(X);
+        interval i1(dist[currentRob][i]);
+        CdiskExists(X1[1],X1[2],P0[i][1],P0[i][2],i1,false);
+        L.push_back(X1);
+    }
+
+    C_q_in(X, L.size()-N_outliers, L);
+}
+
+void SIVIA::innerContractOne(box& X){
+
+    vector<box> L;
+    for(uint i = 0; i < P0.size(); i++){
+        if(i == currentRob) continue;
+        box X1(X);
+        interval i1(dist[currentRob][i]);
+        CdiskExists(X1[1],X1[2],P0[i][1],P0[i][2],i1,true);
+        L.push_back(X1);
+    }
+    C_q_in(X, N_outliers +1, L);
+}
+
+
+//-----------------------------------------------------------------
+//-------------------  BASICS CONTRACTOR      ---------------------
+//-----------------------------------------------------------------
 void SIVIA::contractCircle(interval& x0,interval& y0, interval& x1, interval& y1, interval& d){
 
 
@@ -439,6 +429,10 @@ void SIVIA::contractCircle(interval& x0,interval& y0, double x1, double y1, inte
 
 }
 
+
+//---------------------------------------------------------------------
+// return the union of all yellow boxes stored in the list result.
+//---------------------------------------------------------------------
 box SIVIA::getResult(){
     if(result.size() == 0) return box();
     box res = result[result.size()-1];
@@ -453,7 +447,54 @@ box SIVIA::getResult(){
 
         res = Union(res,result[i]);
     }
-    qDebug()<< res;//result[result.size()-1];
-    drawBox(res,0);
+    //qDebug()<< res;//result[result.size()-1];
+    //drawBox(res,0);
     return res;
 }
+
+//----------------------------------------------------------------------
+//-----------------------------        TOOLS           -----------------
+//----------------------------------------------------------------------
+
+void diffI(interval &x0, interval &x1, interval &c0, interval &c1){
+    interval xt = Inter(Inter(x0, x1)-x1,interval(0,0));
+    if(x1.isEmpty || xt.isEmpty){
+        c0 = interval(); c1 = interval();
+    } else {
+        c0 = (x1.inf == x0.inf) ? interval() :  interval(x1.inf,x0.inf);
+        c1 = (x0.sup == x1.sup) ? interval() :  interval(x0.sup,x1.sup);
+    }
+
+}
+
+vector<box> *diff(box X0, box X1){
+    vector<box> *res = new vector<box>();
+    if(X1.IsEmpty()){
+        res->push_back(X0);
+        return res;
+    }
+    interval cx1, cx2, cy1, cy2;
+    diffI(X0[1],X1[1],cx1, cx2);
+    diffI(X0[2],X1[2],cy1, cy2);
+
+    if(cx1.inf != cx1.sup && !cx1.isEmpty && !X0[2].isEmpty) res->push_back(box(cx1,interval(X0[2])));
+    if(cx2.inf != cx2.sup && !cx2.isEmpty && !X0[2].isEmpty) res->push_back(box(cx2,interval(X0[2])));
+
+    if(cx1.isEmpty && cx2.isEmpty){
+        if(cy1.inf != cy1.sup && !cy1.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(X0[1]),cy1));
+        if(cy2.inf != cy2.sup && !cy2.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(X0[1]),cy2));
+    } else if(!cx1.isEmpty && !cx2.isEmpty){
+        if(cy1.inf != cy1.sup && !cy1.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(cx1.sup,cx2.inf),cy1));
+        if(cy2.inf != cy2.sup && !cy2.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(cx1.sup,cx2.inf),cy2));
+    } else if(!cx1.isEmpty && cx2.isEmpty){
+        if(cy1.inf != cy1.sup && !cy1.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(cx1.sup,X0[1].sup),cy1));
+        if(cy2.inf != cy2.sup && !cy2.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(cx1.sup,X0[1].sup),cy2));
+    } else if(cx1.isEmpty && !cx2.isEmpty) {
+        if(cy1.inf != cy1.sup && !cy1.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(X0[1].inf,cx2.inf),cy1));
+        if(cy2.inf != cy2.sup && !cy2.isEmpty && !X0[1].isEmpty) res->push_back(box(interval(X0[1].inf,cx2.inf),cy2));
+    }else{
+        qDebug("cas non repertorier");
+    }
+    return res;
+}
+//----------------------------------------------------------------------------

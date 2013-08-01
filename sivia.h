@@ -11,7 +11,7 @@
 #include <list>
 
 using namespace std;
-enum {ROB1, ROB2, ROB3, ROBALL, STATE, STEPR1};
+enum {ROB1, ROB2, ROB3, ROBUNIT, ROBALL, STATE, STEPR1};
 
 class SIVIA : public QObject
 {
@@ -35,8 +35,12 @@ public:
     vector<box> incr;
     vector<box> cont;
     vector<robot*> *rob;
+    vector<box> P0;
+    int currentRob;
+
     vector< vector< vector<interval> > > *distance;
 
+    void (SIVIA::*contractor)(box&, int);
     int m;
     int reccordNumber;
     int C;
@@ -63,6 +67,11 @@ public:
     void contractInOut(box &X, vector<vector<interval> > distance);
     void contractReccord(box &X);
     void doStepR1(box X0, vector<robot *> *rob, vector<vector<vector<interval> > > *distance);
+    void outerContractAll(box &X);
+    void innerContractAll(box &X);
+    void doContractOneByOne(box &X, vector<vector<interval> > *dist);
+    void outerContractOne(box &X);
+    void innerContractOne(box &X);
 protected:
 
 signals:
