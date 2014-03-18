@@ -47,11 +47,12 @@ MainWindow::MainWindow(QWidget *parent) :
 //    ui->selectRob->addItem("Robot 6");
     ui->selectRob->setCurrentIndex(1);
 
-    ui->spinBox->setMaximum(rob.size()-1);
+    ui->N_outliers->setMaximum(rob.size()-1);
     ui->resultBar->setMaximum(0);
     ui->resultBox->setMaximum(0);
     drawRobots();
     Rworld->Save("SituationInitial.png");
+
 }
 
 MainWindow::~MainWindow()
@@ -107,8 +108,10 @@ void MainWindow::generateData(int nb0){
 
 
 //--------------------------------------------------------------------------------------------------
-void MainWindow::on_contractAll_clicked()
+// Run the intervals algorithm
+void MainWindow::runLocalisation()
 {
+
     int step = distances.size();
     T0 = vector<box>(step,box(interval(-oo,oo), 2*rob.size()));
 
@@ -119,14 +122,10 @@ void MainWindow::on_contractAll_clicked()
 
 
     sivia->epsilon = ui->EpsilonSpinBox->value();
-
+    sivia->N_outliers = ui->N_outliers->value();
     sivia->runAll(T0,&rob,distances);
 
-    for(uint i = 0; i < T0.size(); i++){
-        for(uint j = 0; j < rob.size(); j++){
-            Rworld->DrawBox(T0[i][2*j+1].inf,T0[i][2*j+1].sup,T0[i][2*j+2].inf,T0[i][2*j+2].sup,QPen(Qt::yellow),QBrush(Qt::NoBrush));
-        }
-    }
+    on_drawAllButton_clicked();
     checkIntegrity(T0);
     update_interface();
 }
@@ -225,9 +224,9 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 }
 
 //--------------------------------------------------------------------------------------------------
-void MainWindow::on_spinBox_editingFinished()
+void MainWindow::on_N_outliers_editingFinished()
 {
-    sivia->N_outliers = ui->spinBox->value();
+    sivia->N_outliers = ui->N_outliers->value();
 }
 //--------------------------------------------------------------------------------------------------
 void MainWindow::on_EpsilonSpinBox_editingFinished()
@@ -241,13 +240,6 @@ void MainWindow::on_clearButtton_clicked()
     Rworld->Clean();
     drawRobots();
 }
-//--------------------------------------------------------------------------------------------------
-void MainWindow::on_DrawCircleBtn_clicked()
-{
-    int indice = ui->selectRob->currentIndex();
-    drawCircles(indice,ui->resultBar->value());
-}
-
 
 //--------------------------------------------------------------------------------------------------
 void MainWindow::on_runTestBtn_clicked()
@@ -267,8 +259,27 @@ void MainWindow::on_resultBar_valueChanged(int position)
     ui->resultBox->setValue(position);
     Rworld->Clean();
     drawRobots(position);
-//    drawAllTrajectories();
     drawBoxesState(position);
+    if(ui->drawCircles->isChecked()){
+        int indice = ui->selectRob->currentIndex();
+        drawCircles(indice,position);
+    }
 }
 //--------------------------------------------------------------------------------------------------
 
+
+void MainWindow::on_drawAllButton_clicked()
+{
+    Rworld->Clean();
+    drawRobots(0);
+    drawAllTrajectories();
+    for(uint i = 0; i < T0.size(); i++){
+        drawBoxesState(i);
+    }
+}
+
+//--------------------------------------------------------------------------------------------------
+void MainWindow::on_contractAll_clicked()
+{
+    runLocalisation();
+}

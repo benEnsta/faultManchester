@@ -22,61 +22,52 @@ public:
     ~MainWindow();
     
 
-    void keyPressEvent(QKeyEvent *event);
+
+
+
+    void runLocalisation();
     void generateData(int nb);
+    void generateDistances(int nb0);
+    void checkIntegrity(vector<box> &T0);
 
 
 
+
+
+    // DRAWING FUNCTIONS
     void drawRobots(int step = 0);
     void drawAllTrajectories();
     void drawTrajectory(int robot_num);
-    void generateDistances(int nb0);
-    void checkIntegrity(vector<box> &T0);
+    void drawBoxesState(int step);
     void drawCircles(int num_rob, int pos);
 
-    void update_interface();
-    void drawBoxesState(int step);
+
+
 private:
     vector<box> T0;
 private slots:
 
-
+    // GUI FUNCTIONS
     void on_clearButtton_clicked();
-//    void on_testContract2_clicked();
-
-//    void clock();
-
-//    void on_drawALL_clicked();
-
-//    void on_stepR1_clicked();
-
-//    void on_DrawCircleBtn_clicked();
-
     void on_runTestBtn_clicked();
-
-//    void on_dynLocBtn_clicked();
-
-
     void on_resultBar_valueChanged(int position);
-
-    void on_spinBox_editingFinished();
-
+    void on_N_outliers_editingFinished();
     void on_EpsilonSpinBox_editingFinished();
-
-//    void on_pushButton_clicked();
-
-    void on_DrawCircleBtn_clicked();
-
     void on_contractAll_clicked();
-
     void on_resultBox_valueChanged(int arg1);
+    void on_drawAllButton_clicked();
+    void update_interface();
+    void keyPressEvent(QKeyEvent *event);
+
+
+
 
 private:
     Ui::MainWindow *ui;
     repere *Rsivia,*Rworld;
     SIVIA* sivia;
     vector<Robot*> rob;
-    vector <vector <vector < interval> > > distances;
+    vector <iMatrix> distances;
 };
 
 #endif // MAINWINDOW_H
