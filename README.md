@@ -1,3 +1,3 @@
 faultManchester
 ===============
-Fautl detection programm
+Fault detection programm
