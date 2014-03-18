@@ -39,7 +39,7 @@ public:
     void Incremente(interval &X1, interval &Y1, interval &X, interval &Y, double theta, double vit, double noise);
     void Incremente(box &X, box &X0, double theta, double vit, double err);
     void Decremente(box &X, box &X0, double theta, double vit, double err);
-    void Decremente(interval &X1, interval &Y1, interval &X, interval &Y, double theta, double V);
+    void Decremente(interval &X1, interval &Y1, interval &X, interval &Y, double theta, double V, double err);
 
     void runAll(vector<box> &T0, vector<Robot *> *rob, vector<iMatrix> &distance);
     void outerContractAll2(box &X, iMatrix &distances);

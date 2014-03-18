@@ -34,20 +34,20 @@ MainWindow::MainWindow(QWidget *parent) :
     // ---------- Add 3 robots --------------
     rob.push_back(new Robot());
     ui->selectRob->addItem("Robot 0");
-    rob.push_back(new Robot(8,7, M_PI_2));
+    rob.push_back(new Robot(8,7, M_PI_2, 0.01));
     ui->selectRob->addItem("Robot 1");
-    rob.push_back(new Robot(-8,4));
+    rob.push_back(new Robot(-8,4, 0, 0.01));
     ui->selectRob->addItem("Robot 2");
-    rob.push_back(new Robot(-5,-9,-M_PI_2));
+    rob.push_back(new Robot(-5,-9,-M_PI_2, 0.01));
     ui->selectRob->addItem("Robot 3");
-    rob.push_back(new Robot(-5,7));
+    rob.push_back(new Robot(-5,7, 0.3, 0.01));
 //    ui->selectRob->addItem("Robot 4");
 //    rob.push_back(new Robot(-4.5,-4.7));
 //    ui->selectRob->addItem("Robot 5");
 //    rob.push_back(new Robot(4.5,-3.5));
 //    ui->selectRob->addItem("Robot 6");
     ui->selectRob->setCurrentIndex(1);
-
+    ui->nbStep->setValue(100);
 //    ui->N_outliers->setMaximum(rob.size()-1);
     ui->resultBar->setMaximum(0);
     ui->resultBox->setMaximum(0);
@@ -82,6 +82,9 @@ void MainWindow::generateDistances(int nb0){
 //                if( ((double) noise_rd/RAND_MAX) < 0.9){
 //                    trueDistance = 10000;
 //                    nOut++;
+//                }
+//                if(i == 50 && j == 1 && k == 2){
+//                    trueDistance = 1000;
 //                }
                 double noise = -0.1 + 0.2*noise_rd/(RAND_MAX);
             //    qDebug() << noise_rd << "  " << -0.1 + 0.2*((double) noise_rd/(RAND_MAX));
@@ -149,7 +152,7 @@ void MainWindow::checkIntegrity(vector<box> &T0){
             qDebug() << T0[i].Width();
             bool t = (T0[i][2*j+1].contains(r->x_v[i]) && T0[i][2*j+2].contains(r->y_v[i]));
             if(t == false){
-                qDebug() << "error the true position isn't inside the box at step " << i;
+                qDebug() << "error the true position isn't inside the box at step " << i << "and robot " << j;
                 return;
             }
         }
