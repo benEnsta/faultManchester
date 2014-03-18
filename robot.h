@@ -9,16 +9,14 @@ class Robot
 {
 public:
     Robot(double x = 0, double y= 0, double theta = 0);
-    double x,y,theta,vit;
+    double x0,y0,theta0,speed0;
     vector<double> speed_v;
     vector<double> theta_v;
     vector<double> x_v;
     vector<double> y_v;
-    vector<double> distance_v;
 
     void cleanAll();
     void Clock(double,double);
-    double getDistanceTo(double x0, double y0);
     int generate8(double R, int nb_steps=1e10);
 };
 

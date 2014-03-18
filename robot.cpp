@@ -4,10 +4,11 @@ extern double dt;
 
 Robot::Robot(double x, double y, double theta)
 {
-    this->x=x;
-    this->y=y;
-    this->theta=theta;
-    vit=0;
+    this->x0=x;
+    this->y0=y;
+    this->theta0=theta;
+    speed0=0;
+    cleanAll();
 }
 
 void Robot::cleanAll()
@@ -16,16 +17,21 @@ void Robot::cleanAll()
     theta_v.clear();
     x_v.clear();
     y_v.clear();
-    distance_v.clear();
+    x_v.push_back(x0);
+    y_v.push_back(y0);
+    theta_v.push_back(theta0);
+    speed_v.push_back(speed0);
 }
 
-double Robot::getDistanceTo(double x0, double y0)
-{
-    return hypot(this->x - x0, this->y - y0);
-}
+
 
 void Robot::Clock(double u1, double u2)
-{   x=x+dt*vit*cos(theta);
+{
+    double x = x_v.back();
+    double y = y_v.back();
+    double theta = theta_v.back();
+    double vit = speed_v.back();
+    x=x+dt*vit*cos(theta);
     y=y+dt*vit*sin(theta);
     theta=theta+dt*u1;
     vit=vit+dt*u2;
@@ -40,7 +46,7 @@ int Robot::generate8(double R, int nb_steps){
     cleanAll();
     //double n = (int) ((2*M_PI*R) / (V0*dt));
     double V0 = (4*M_PI*R) / (nb_steps*dt);
-    vit = V0;
+    speed_v[0] = V0;
     for(uint i = 0; i < nb_steps ; i++){
         double u1 = (i < 0.5*nb_steps) ? (V0/R): -(V0/R);
         Clock(u1,0);

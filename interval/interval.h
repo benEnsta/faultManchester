@@ -85,7 +85,7 @@ public:
     friend void DistanceDirSegment(double& d,double& phi, double mx, double my, double theta, double ax, double ay, double bx, double by);
     friend void DistanceDirSegments(double& d,double& phi, double mx, double my, double theta, vector<double> ax, vector<double> ay, vector<double> bx, vector<double> by);
 
-
+    bool      contains   (double v);
     friend interval  Exp        (const interval&);
     friend interval  Inflate    (const interval&,double);
     friend interval  Inter      (const interval&,const interval&);

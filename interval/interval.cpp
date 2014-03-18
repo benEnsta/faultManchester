@@ -90,6 +90,12 @@ interval& interval::Intersect(const interval& Y)
     return *this;
 }
 
+bool interval::contains(double v)
+{
+    if( v - inf > 1e-14 && sup-v > 1e-14) return true;
+    return false;
+}
+
 //----------------------------------------------------------------------
 interval::interval (const interval& a) {*this = a;}
 //----------------------------------------------------------------------

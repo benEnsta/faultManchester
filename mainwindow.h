@@ -21,19 +21,25 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     
-    void drawRobots();
-    void drawDistances(uint k);
+
     void keyPressEvent(QKeyEvent *event);
     void generateData(int nb);
-    void drawDistances(uint k, interval *dist);
-    void drawBox(box X, QPen pen);
 
 
+
+    void drawRobots(int step = 0);
+    void drawAllTrajectories();
+    void drawTrajectory(int robot_num);
+    void generateDistances(int nb0);
+    void checkIntegrity(vector<box> &T0);
+    void drawCircles(int num_rob, int pos);
+
+    void update_interface();
+    void drawBoxesState(int step);
+private:
+    vector<box> T0;
 private slots:
-    // SIVIA SLOT
-    void drawBox(box X, int type);
-    void drawCircle(int pos);
-    //BUTTONS SLOT
+
 
     void on_clearButtton_clicked();
 //    void on_testContract2_clicked();
@@ -50,7 +56,6 @@ private slots:
 
 //    void on_dynLocBtn_clicked();
 
-    void on_resultBar_sliderMoved(int position);
 
     void on_resultBar_valueChanged(int position);
 
@@ -64,15 +69,14 @@ private slots:
 
     void on_contractAll_clicked();
 
+    void on_resultBox_valueChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     repere *Rsivia,*Rworld;
     SIVIA* sivia;
     vector<Robot*> rob;
     vector <vector <vector < interval> > > distances;
-    vector<box> pos;
-    box Xc;
-    QTimer *timer;
 };
 
 #endif // MAINWINDOW_H
