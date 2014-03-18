@@ -42,7 +42,6 @@ void SIVIA::runAll(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distanc
 
 void SIVIA::runAll2(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distance){
 
-
     int nb_step = T0.size();
     int step = rob->size()*2;
     vector<box> L;
@@ -50,7 +49,6 @@ void SIVIA::runAll2(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distan
     // Forward propagation
     box X = vector2box(T0);
     Ctrajectory(X,rob);
-
     for(uint i = 0; i < nb_step; i++){
         for(uint j = 0; j < rob->size(); j++){
             for(uint k = 0; k < rob->size(); k++){
