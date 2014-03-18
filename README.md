@@ -1,0 +1,3 @@
+faultManchester
+===============
+Fautl detection programm
