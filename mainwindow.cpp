@@ -40,8 +40,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->selectRob->addItem("Robot 2");
     rob.push_back(new Robot(-5,-9,-M_PI_2, 0.01));
     ui->selectRob->addItem("Robot 3");
-    rob.push_back(new Robot(-5,7, 0.3, 0.01));
-//    ui->selectRob->addItem("Robot 4");
+    rob.push_back(new Robot(-5,7, 0.3, 0.001));
+    ui->selectRob->addItem("Robot 4");
 //    rob.push_back(new Robot(-4.5,-4.7));
 //    ui->selectRob->addItem("Robot 5");
 //    rob.push_back(new Robot(4.5,-3.5));
@@ -53,7 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->resultBox->setMaximum(0);
     drawRobots();
     Rworld->Save("SituationInitial.png");
-
+    srand(0);
 }
 
 MainWindow::~MainWindow()
@@ -69,8 +69,8 @@ MainWindow::~MainWindow()
 
 // return the distance between the robot number n1 and n2 with a noise.
 // Outlier generation could be added in this part
-int nOut = 0;
 void MainWindow::generateDistances(int nb0){
+    int nOut = 0;
     for(uint i = 0; i < nb0; i++){ // for each time step
 
         iMatrix dist(rob.size(),vector<interval> (rob.size()));
@@ -79,15 +79,16 @@ void MainWindow::generateDistances(int nb0){
                 if(k == j) continue;
                 double trueDistance = hypot(rob[k]->x_v[i] - rob[j]->x_v[i], rob[k]->y_v[i] - rob[j]->y_v[i]);
                 int noise_rd =  rand();
-//                if( ((double) noise_rd/RAND_MAX) < 0.9){
-//                    trueDistance = 10000;
-//                    nOut++;
-//                }
+                if( ((double) noise_rd/RAND_MAX) > 0.99){
+                    trueDistance *= 10;
+                    nOut++;
+                    qDebug() << "outlier with " << i << " " << k << " "<< j ;
+                }
 //                if(i == 50 && j == 1 && k == 2){
 //                    trueDistance = 1000;
 //                }
-                double noise = -0.1 + 0.2*noise_rd/(RAND_MAX);
-            //    qDebug() << noise_rd << "  " << -0.1 + 0.2*((double) noise_rd/(RAND_MAX));
+                double noise = -0.09 + 0.18*noise_rd/(RAND_MAX);
+
                 dist[k][j] = interval(trueDistance + noise) + interval(-0.1,0.1);
             }
         }
@@ -135,8 +136,7 @@ void MainWindow::runLocalisation()
     sivia->N_outliers = ui->N_outliers->value();
     sivia->runAll2(T0,&rob,distances);
 
-
-
+    outliers  = sivia->findOutliers(T0,&rob,distances);
 
     on_drawAllButton_clicked();
     checkIntegrity(T0);
@@ -146,13 +146,17 @@ void MainWindow::runLocalisation()
 //--------------------------------------------------------------------------------------------------
 // check if the true position of each robot belong the the corresponding box
 void MainWindow::checkIntegrity(vector<box> &T0){
-    for(uint i = 0; i < T0.size(); i++){
+    for(int i = T0.size()-1; i >= 0; i--){
         for(uint j = 0; j < rob.size(); j++){
             Robot* r = rob[j];
-            qDebug() << T0[i].Width();
+//            qDebug() << T0[i].Width();
+//            if(j == 2){
+//                qDebug() << "X " << T0[i][2*j+1] << " Y " << T0[i][2*j+2];
+//            }
             bool t = (T0[i][2*j+1].contains(r->x_v[i]) && T0[i][2*j+2].contains(r->y_v[i]));
             if(t == false){
                 qDebug() << "error the true position isn't inside the box at step " << i << "and robot " << j;
+                qDebug() << "X " << T0[i][2*j+1] << " Y " << T0[i][2*j+2];
                 return;
             }
         }
@@ -206,11 +210,24 @@ void MainWindow::drawCircles(int num_rob, int pos)
 // draw boxes which enclosed true position of the robot at time step <step>
 void MainWindow::drawBoxesState(int step){
     for(uint j = 0; j < rob.size(); j++){
-        T0[step].Width();
         Rworld->DrawBox(T0[step][2*j+1].inf,T0[step][2*j+1].sup,T0[step][2*j+2].inf,T0[step][2*j+2].sup,QPen(Qt::black),QBrush(Qt::NoBrush));
     }
 }
 
+
+void MainWindow::drawOutliers(){
+    int size = outliers.size()/3;
+    for(uint i = 0; i < size; i++){
+        int step = outliers[3*i];
+        int idx = outliers[3*i+1];
+        int idy = outliers[3*i+2];
+        Rworld->DrawBox(T0[step][2*idx+1].inf,T0[step][2*idx+1].sup,T0[step][2*idx+2].inf,T0[step][2*idx+2].sup,QPen(Qt::red),QBrush(Qt::red));
+        Rworld->DrawBox(T0[step][2*idy+1].inf,T0[step][2*idy+1].sup,T0[step][2*idy+2].inf,T0[step][2*idy+2].sup,QPen(Qt::green),QBrush(Qt::green));
+
+//        Rworld->DrawLine(Center(T0[step][2*idx+1]),Center(T0[step][2*idx+2]),
+//                Center(T0[step][2*idy+1]), Center(T0[step][2*idy+2]),QPen(Qt::red));
+    }
+}
 
 //======================================================================================================
 //===================================== GUI FUNCTIONS ==================================================
@@ -290,6 +307,8 @@ void MainWindow::on_drawAllButton_clicked()
     for(uint i = 0; i < T0.size(); i++){
         drawBoxesState(i);
     }
+
+    drawOutliers();
 }
 
 //--------------------------------------------------------------------------------------------------

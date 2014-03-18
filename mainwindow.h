@@ -43,6 +43,7 @@ public:
 
 
 
+    void drawOutliers();
 private:
     vector<box> T0;
 private slots:
@@ -68,6 +69,7 @@ private:
     SIVIA* sivia;
     vector<Robot*> rob;
     vector <iMatrix> distances;
+    vector<int> outliers;
 };
 
 #endif // MAINWINDOW_H

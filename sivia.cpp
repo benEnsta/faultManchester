@@ -8,11 +8,12 @@ SIVIA::SIVIA() : QObject()
 {
     N_outliers = 0;
 }
-
+//---------------------------------------------------------------------------
 SIVIA::~SIVIA(){
 }
 
 
+//---------------------------------------------------------------------------
 void SIVIA::runAll(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distance){
     int ny = distance.size();
 
@@ -39,7 +40,7 @@ void SIVIA::runAll(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distanc
     }
 }
 
-
+//---------------------------------------------------------------------------
 void SIVIA::runAll2(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distance){
 
     int nb_step = T0.size();
@@ -49,26 +50,54 @@ void SIVIA::runAll2(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distan
     // Forward propagation
     box X0 = vector2box(T0);
     Ctrajectory(X0,rob);
-    /*for(uint i = 0; i < nb_step; i++){
+    for(uint i = 0; i < nb_step; i++){
         for(uint j = 0; j < rob->size(); j++){
             for(uint k = 0; k < rob->size(); k++){
                 if(j == k) continue;
                 box X(X0);
-//                interval i1(distance[i][j][k]);
-//                contractCircle(X[i*step + 2*j + 1],X[i*step + 2*j + 2],
-//                               X[i*step + 2*k + 1],X[i*step + 2*k + 2],i1);
-//                Ctrajectory(X,rob);
+                interval i1(distance[i][j][k]);
+                contractCircle(X[i*step + 2*j + 1],X[i*step + 2*j + 2],
+                               X[i*step + 2*k + 1],X[i*step + 2*k + 2],i1);
+                Ctrajectory(X,rob);
                 L.push_back(X);
             }
         }
         qDebug()<< "step number :" << i;
     }
-    C_q_in(X0, L.size()-N_outliers, L)*/;
+    C_q_in(X0, L.size()-N_outliers, L);
+    if(X0.IsEmpty()){
+        qDebug() << "X is Empty";
+    }
     T0 = box2vector(X0,2*rob->size());
 }
 
+vector<int> SIVIA::findOutliers(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distance){
+    int nb_step = T0.size();
+    int step = rob->size()*2;
+    box X0 = vector2box(T0);
 
+    vector<int> out;
+    for(uint i = 0; i < nb_step; i++){
+        for(uint j = 0; j < rob->size(); j++){
+            for(uint k = 0; k < rob->size(); k++){
+                if(j == k) continue;
+                box X(X0);
+                interval i1(distance[i][j][k]);
+                contractCircle(X[i*step + 2*j + 1],X[i*step + 2*j + 2],
+                               X[i*step + 2*k + 1],X[i*step + 2*k + 2],i1);
+                if(X.IsEmpty()){
+                    qDebug() << "outliers " << i << " "<< j << " "<< k << " ";
+                    out.push_back(i); out.push_back(j); out.push_back(k);
+                }
+            }
+        }
+    }
 
+    return out;
+
+}
+
+//---------------------------------------------------------------------------
 void SIVIA::fixPoint(box &X, iMatrix &distance){
     bool sortie=false;
     while (!sortie)
@@ -80,7 +109,7 @@ void SIVIA::fixPoint(box &X, iMatrix &distance){
     }
 }
 
-
+//---------------------------------------------------------------------------
 void SIVIA::Ctrajectory(box &X,vector<Robot*> *rob){
     int nb_state = rob->at(0)->x_v.size()-1;
     int step = 2*rob->size();
@@ -91,7 +120,7 @@ void SIVIA::Ctrajectory(box &X,vector<Robot*> *rob){
             Robot* r = rob->at(j);
             Incremente(X[i*step + 2*j + 1],X[i*step + 2*j + 2],
                     X[(i-1)*step + 2*j + 1],X[(i-1)*step + 2*j + 2],
-                    r->theta_v[i-1],r->speed_v[i-1],r->noise+1e-4);
+                    r->theta_v[i-1],r->speed_v[i-1],r->noise);
         }
     }
 
@@ -101,14 +130,11 @@ void SIVIA::Ctrajectory(box &X,vector<Robot*> *rob){
             Robot* r = rob->at(j);
             Decremente(X[i*step + 2*j+1],X[i*step + 2*j+2],
                     X[(i-1)*step + 2*j+1], X[(i-1)*step + 2*j+2],
-                    r->theta_v[i-1],r->speed_v[i-1],r->noise+1e-4);
-
-            if(j == 1){
-                qDebug() << "Xi" << X[i*step + 2*j+1] << "Yv " << r->x_v[i];
-            }
+                    r->theta_v[i-1],r->speed_v[i-1],r->noise);
         }
     }
 }
+//---------------------------------------------------------------------------
 
 /**
  * @brief this function splits a <boxSize>*r dimentionnal box into a list of r boxes of size <boxSize>
@@ -129,6 +155,7 @@ vector<box> SIVIA::box2vector(box X, int boxSize){
     return list;
 }
 
+//---------------------------------------------------------------------------
 
 /**
  * @brief this function merges a list of r boxes of size 2 into a box of size 2*r
@@ -177,13 +204,13 @@ void SIVIA::Decremente(box &X, box &X0, double theta, double vit, double err){
 void SIVIA::Decremente(interval& X1,interval& Y1, interval& X,interval& Y,
                        double theta,double V, double err)
 {
-    double dx = dt*cos(theta)*V;
-    double dy = dt*sin(theta)*V;
+    interval dx = dt*cos(theta)*V;// + interval(-err,err);
+    interval dy = dt*sin(theta)*V;// + interval(-err,err);
     Cplus(X1, dx, X, -1);// - interval(-0.005, 0.005);
     Cplus(Y1, dy, Y, -1);// - interval(-0.005, 0.005);
-//    interval error(-0.005, 0.005);
-//    Cmoins(X, X, error, -1);// - interval(-0.005, 0.005);
-//    Cmoins(Y, Y, error, -1);// - interval(-0.005, 0.005);
+//    interval error(-0.005, 0.005), error2(error);
+//    Cplus(X, X, error, -1);// - interval(-0.005, 0.005);
+//    Cplus(Y, Y, error2, -1);// - interval(-0.005, 0.005);
 }
 
 
