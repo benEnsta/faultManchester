@@ -32,6 +32,7 @@ public:
     void DrawText(QString s, int n);
     //void DrawMap(Map map);
     void Save(QString nom);
+    void SaveSVG(QString nom);
 
     void DrawHok(float *tab, float *angles, double x, double y, double theta);
     void centerOn(double x, double y, double width = 5, double height = 5);

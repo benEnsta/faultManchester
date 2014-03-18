@@ -93,53 +93,14 @@
    <widget class="QPushButton" name="clearButtton">
     <property name="geometry">
      <rect>
-      <x>250</x>
-      <y>500</y>
-      <width>98</width>
+      <x>230</x>
+      <y>450</y>
+      <width>91</width>
       <height>27</height>
      </rect>
     </property>
     <property name="text">
      <string>Clear</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="testContract2">
-    <property name="geometry">
-     <rect>
-      <x>130</x>
-      <y>450</y>
-      <width>91</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Contract2</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="startTimer">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>500</y>
-      <width>98</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Start Timer</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="contractState">
-    <property name="geometry">
-     <rect>
-      <x>250</x>
-      <y>530</y>
-      <width>98</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>ContractState</string>
     </property>
    </widget>
    <widget class="QSpinBox" name="nbStep">
@@ -156,32 +117,6 @@
     </property>
     <property name="value">
      <number>120</number>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="drawALL">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>450</y>
-      <width>98</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>DrawALL</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="stepR1">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>520</y>
-      <width>98</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>StepR1</string>
     </property>
    </widget>
    <widget class="QComboBox" name="selectRob">
@@ -220,20 +155,10 @@
      <string>Run Test</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="dynLocBtn">
-    <property name="geometry">
-     <rect>
-      <x>228</x>
-      <y>444</y>
-      <width>98</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Dyn loc</string>
-    </property>
-   </widget>
    <widget class="QScrollBar" name="resultBar">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -247,6 +172,9 @@
     </property>
    </widget>
    <widget class="QSpinBox" name="resultBox">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>300</x>
@@ -279,6 +207,19 @@
      <string>N Outliers</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="contractAll">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>480</y>
+      <width>114</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ContractAll</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -286,7 +227,7 @@
      <x>0</x>
      <y>0</y>
      <width>1097</width>
-     <height>25</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

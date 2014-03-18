@@ -165,6 +165,14 @@ interval operator/  (const interval& a, const interval& b)
     }
     else return interval(-oo,oo);
 }
+//----------------------------------------------------------------------
+bool operator ==(const interval & a, const interval &b)
+{
+    if (a.inf == b.inf && a.sup == b.sup && a.isEmpty == b.isEmpty)
+        return true;
+    else
+        return false;
+}
 //------------------------------------------------------------------------------
 ostream& operator<< (ostream& os, const interval& a)
 {
@@ -1169,7 +1177,7 @@ void DistanceDirSegment(double& d,double& phi, double mx, double my, double thet
 }
 //----------------------------------------------------------------------
 void DistanceDirSegments(double& d,double& phi, double mx, double my, double theta, vector<double> ax, vector<double> ay, vector<double> bx, vector<double> by)
-{      // Distance directionnelle relativement à un polygone (le trièdre m-a-b doit être direct, sinon cette distance est infinie)
+{      // Distance directionnelle relativement  un polygone (le tridre m-a-b doit tre direct, sinon cette distance est infinie)
     d=oo;
     for (uint j=0;j<ax.size();j++)
     {double dj,phij;
@@ -1229,7 +1237,7 @@ void DistanceDirSegmentsOrCircles(double& d,double& phi, double mx, double my, d
 
 //----------------------------------------------------------------------
 void CPointInSegment(interval& mx, interval& my, double& ax, double& ay, double& bx,double& by)
-{      // contracte relativement à la contrainte : "m appartient au segment [a,b]"
+{      // contracte relativement  la contrainte : "m appartient au segment [a,b]"
     mx=Inter(mx,Union(interval(ax,ax),interval(bx,bx)));
     my=Inter(my,Union(interval(ay,ay),interval(by,by)));
     interval ma_x=ax-mx;
@@ -1244,7 +1252,7 @@ void CPointInSegment(interval& mx, interval& my, double& ax, double& ay, double&
 }
 //----------------------------------------------------------------------
 void CPointInCircle(interval& mx, interval& my, double& cx, double& cy, double& r)
-{      // contracte relativement à la contrainte : "m appartient au cercle de centre c et de rayon r"
+{      // contracte relativement  la contrainte : "m appartient au cercle de centre c et de rayon r"
     interval d_x=mx-cx;
     interval d_y=my-cy;
     interval d2_x=Sqr(d_x);
@@ -1259,7 +1267,7 @@ void CPointInCircle(interval& mx, interval& my, double& cx, double& cy, double& 
 }
 //----------------------------------------------------------------------
 void CPointInSegments(interval& mx, interval& my, vector<double> ax, vector<double> ay, vector<double> bx, vector<double> by)
-{      // contracte relativement à la contrainte : "m appartient au polygone dont les segments sont les [ai,bi]"
+{      // contracte relativement  la contrainte : "m appartient au polygone dont les segments sont les [ai,bi]"
     vector<interval> Mx(ax.size());
     vector<interval> My(ax.size());
     for (uint j=0;j<ax.size();j++)
@@ -1275,7 +1283,7 @@ void CPointInSegments(interval& mx, interval& my, vector<double> ax, vector<doub
 }
 //----------------------------------------------------------------------
 void CPointInCircles(interval& mx, interval& my, vector<double> cx, vector<double> cy, vector<double> r)
-{      // contracte relativement à la contrainte : "m appartient à un des cercles de centre ci et de rayon ri"
+{      // contracte relativement  la contrainte : "m appartient  un des cercles de centre ci et de rayon ri"
     vector<interval> Mx(cx.size());
     vector<interval> My(cx.size());
     for (uint j=0;j<cx.size();j++)
@@ -1290,7 +1298,7 @@ void CPointInCircles(interval& mx, interval& my, vector<double> cx, vector<doubl
 }
 //----------------------------------------------------------------------
 void CPointInSegmentsOrCircles(interval& mx, interval& my,  vector<double> ax, vector<double> ay, vector<double> bx, vector<double> by, vector<double> cx, vector<double> cy, vector<double> r)
-{      // contracte relativement à la contrainte : "m appartient soit au polygone soit à un des cercles de centre ci et de rayon ri"
+{      // contracte relativement  la contrainte : "m appartient soit au polygone soit  un des cercles de centre ci et de rayon ri"
     vector<interval> Mx(2);
     vector<interval> My(2);
     interval mx0=mx;
@@ -1308,7 +1316,7 @@ void CPointInSegmentsOrCircles(interval& mx, interval& my,  vector<double> ax, v
 }
 //----------------------------------------------------------------------
 void CPoseInSegment(interval& mx, interval& my, interval& phi,double& ax, double& ay, double& bx,double& by)
-{      // contracte relativement à "la pose (m,phi) appartient au segment [a,b]"
+{      // contracte relativement  "la pose (m,phi) appartient au segment [a,b]"
     CPointInSegment(mx,my,ax,ay,bx,by);
     double ab_x=bx-ax;   //(bx-ax)*cos(phi)+(by-ay)*sin(phi)=0
     double ab_y=by-ay;
@@ -1375,7 +1383,7 @@ void CPoseInSegments(interval& mx, interval& my, interval& phi,vector<double> ax
 //----------------------------------------------------------------------
 void CPoseInSegmentsOrCircles(interval& mx,interval& my,interval& malpha, vector<double> ax,vector<double> ay,vector<double> bx,vector<double> by,
                               vector<double> cx, vector<double> cy, vector<double> r)
-{      // "la pose (m,alpha) appartient soit au polygone soit à un des cercles de centre ci et de rayon ri"
+{      // "la pose (m,alpha) appartient soit au polygone soit  un des cercles de centre ci et de rayon ri"
     vector<interval> Mx(2);
     vector<interval> My(2);
     vector<interval> Malpha(2);
@@ -1543,7 +1551,7 @@ void CDistanceDirSegment(interval& dist,interval& mx, interval& my, interval& th
 }
 //----------------------------------------------------------------------
 void CDistanceDirSegments(interval& distmin, interval& mx, interval& my, interval& theta, vector<double> ax, vector<double> ay, vector<double> bx, vector<double> by)
-{      // Distance directionnelle relativement à un polygone
+{      // Distance directionnelle relativement  un polygone
     vector<interval> dist(ax.size());
     for (uint j=0;j<ax.size();j++)  dist[j]=interval(0,oo);
     for (uint j=0;j<ax.size();j++)

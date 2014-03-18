@@ -11,13 +11,15 @@
 #include <list>
 
 using namespace std;
-enum {ROB1, ROB2, ROB3, ROBUNIT, ROBALL, STATE, STEPR1};
-
+enum {YELLOWBOX, DARKBOX, INSIDEBOX, OUTSIDEBOX, DARKBLUEBOX};
+typedef vector <vector < interval> > iMatrix;
 class SIVIA : public QObject
 {
     Q_OBJECT
 public:
     explicit SIVIA();
+
+     typedef void (SIVIA::*AContractorPtr)(box &);
     ~SIVIA();
     void run();
 
@@ -34,17 +36,16 @@ public:
     vector<box> result1;
     vector<box> incr;
     vector<box> cont;
-    vector<robot*> *rob;
+    vector<Robot*> *rob;
     vector<box> P0;
     int currentRob;
 
     vector< vector< vector<interval> > > *distance;
 
-    void (SIVIA::*contractor)(box&, int);
+    AContractorPtr contractor;
     int m;
     int reccordNumber;
-    int C;
-    void getDistances(vector<robot*> &robs);
+    void getDistances(vector<Robot*> &robs);
 
     void contractCircle(interval &x0, interval &y0, interval &x1, interval &y1, interval &d);
     void contractCircle(interval& x0,interval& y0, double x1, double y1, interval& d);
@@ -53,25 +54,35 @@ public:
 
 
     box getResult();
-    void stateEstim(box &X, vector<robot *> &robs);
+    void stateEstim(box &X, vector<Robot *> &robs);
     void Incremente(interval &X1, interval &Y1, interval &X, interval &Y, double theta, double vit, double noise);
     void Incremente(box &X0, box X, double theta, double vit);
     void Decremente(box &X0, box X, double theta, double vit);
     void Decremente(interval &X1, interval &Y1, interval &X, interval &Y, double theta, double V);
     void innerContract(box &X, int r);
-    void contract_and_draw(box &X, int r);
+    void contract_and_draw(box &X);
     void outerContract(box &X, int r);
     void contractInOut(box &X);
     void contractState(box &X);
-    void doContractState(box X0, vector<robot *> *rob, vector<vector<vector<interval> > > *distance);
+    void doContractState(box X0, vector<Robot *> *rob, vector<vector<vector<interval> > > *distance);
     void contractInOut(box &X, vector<vector<interval> > distance);
     void contractReccord(box &X);
-    void doStepR1(box X0, vector<robot *> *rob, vector<vector<vector<interval> > > *distance);
+    void doStepR1(box X0, vector<Robot *> *rob, vector<vector<vector<interval> > > *distance);
     void outerContractAll(box &X);
     void innerContractAll(box &X);
-    void doContractOneByOne(box &X, vector<vector<interval> > *dist);
-    void outerContractOne(box &X);
-    void innerContractOne(box &X);
+    box doContractOneByOne(box X, vector<vector<interval> > *dist);
+
+    void contractOneRobot(box &X, vector<box> &P, interval *distances, int robotNumber, bool direction);
+    void wrapperContractOneRobot(box &X);
+
+    void contract_and_draw(box &X, AContractorPtr contract, bool outside);
+    void innerContractOneRobot(box &X);
+    void outerContractOneRobot(box &X);
+    void contract_and_drawOneRobot(box &X);
+    void doAllInOne(box X0, vector<vector<interval> > *distance);
+    void runAll(vector<box> &T0, vector<Robot *> *rob, vector<iMatrix> &distance);
+    void outerContractAll2(box &X, iMatrix &distances);
+    void fixPoint(box &X, iMatrix &distance);
 protected:
 
 signals:
@@ -81,7 +92,7 @@ signals:
     void drawRobot(box X);
     void workFinished();
 public slots:
-    void doWork(box X0, vector<vector<interval> > *dist);
+    void doWork(box X0, int robotNumber, vector<vector<interval> > *dist);
 };
 
 #endif // SIVIA_H

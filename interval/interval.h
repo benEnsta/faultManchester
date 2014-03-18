@@ -64,6 +64,7 @@ public:
     friend interval operator* (const interval&, const double);
     friend interval operator* (const interval&, const interval&);
     friend interval operator/ (const interval& ,const interval&);
+    friend bool operator== (const interval& ,const interval&);
     friend std::ostream& operator<< (std::ostream&, const interval&);
     friend QDataStream & operator<< (QDataStream &, const interval&);
     friend QDataStream & operator>> (QDataStream &, interval&);

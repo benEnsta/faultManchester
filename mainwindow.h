@@ -7,6 +7,7 @@
 #include "sivia.h"
 #include <vector>
 #include <QTimer>
+#include <stdlib.h>
 using namespace std;
 namespace Ui {
 class MainWindow;
@@ -26,6 +27,8 @@ public:
     void generateData(int nb);
     void drawDistances(uint k, interval *dist);
     void drawBox(box X, QPen pen);
+
+
 private slots:
     // SIVIA SLOT
     void drawBox(box X, int type);
@@ -33,24 +36,19 @@ private slots:
     //BUTTONS SLOT
 
     void on_clearButtton_clicked();
-    void on_testContract2_clicked();
+//    void on_testContract2_clicked();
 
-    void clock();
+//    void clock();
 
+//    void on_drawALL_clicked();
 
-    void on_startTimer_clicked();
+//    void on_stepR1_clicked();
 
-    void on_contractState_clicked();
-
-    void on_drawALL_clicked();
-
-    void on_stepR1_clicked();
-
-    void on_DrawCircleBtn_clicked();
+//    void on_DrawCircleBtn_clicked();
 
     void on_runTestBtn_clicked();
 
-    void on_dynLocBtn_clicked();
+//    void on_dynLocBtn_clicked();
 
     void on_resultBar_sliderMoved(int position);
 
@@ -58,11 +56,19 @@ private slots:
 
     void on_spinBox_editingFinished();
 
+    void on_EpsilonSpinBox_editingFinished();
+
+//    void on_pushButton_clicked();
+
+    void on_DrawCircleBtn_clicked();
+
+    void on_contractAll_clicked();
+
 private:
     Ui::MainWindow *ui;
     repere *Rsivia,*Rworld;
     SIVIA* sivia;
-    vector<robot*> rob;
+    vector<Robot*> rob;
     vector <vector <vector < interval> > > distances;
     vector<box> pos;
     box Xc;

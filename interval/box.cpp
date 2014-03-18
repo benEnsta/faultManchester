@@ -160,7 +160,17 @@ box operator*(const double a,const box& X)
 //----------------------------------------------------------------------
 box operator*(const box& X, const interval& a)
     {return (a*X);}
-
+//----------------------------------------------------------------------
+bool operator ==(const box & a, const box &b)
+{
+    if (a.dim != b.dim) return false;
+    for(uint i = 1; i <= a.dim; i++){
+        if(!(a[i] == b[i])){
+            return false;
+        }
+    }
+    return true;
+}
 //----------------------------------------------------------------------
 ostream& operator<<(ostream& os, const box& X)
 {   cout << "box :"<<"\t dim="<<Size(X)<<"\n";

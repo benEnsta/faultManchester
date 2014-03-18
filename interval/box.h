@@ -45,6 +45,7 @@ friend box	operator-(const box&,const box&);
 friend box	operator*(const interval&,const box&);
 friend box      operator*(const double,const box&);
 friend box	operator*(const box&,const interval&);
+friend bool operator==(const box&, const box&);
 friend ostream& operator<<(ostream&, const box&);
 friend QDebug   operator<<(QDebug, const box&);
 

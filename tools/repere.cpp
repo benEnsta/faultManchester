@@ -1,5 +1,6 @@
 #include "repere.h"
 #include <QDebug>
+#include <QtSvg/QSvgGenerator>
 //#include "map.h"
 
 repere::repere(QObject *parent) :
@@ -146,6 +147,21 @@ void repere::Save(QString nom)
     Scene->render(pngPainter);
     pngPainter->end();
     image->save(nom+".png","PNG",100);
+}
+//--------------------------------------------------------------------------------------------------
+void repere::SaveSVG(QString nom)
+{
+    QSvgGenerator generator;
+    generator.setFileName(nom);
+    generator.setSize(QSize(1000, 1000));
+    generator.setViewBox(QRect(0, 0, 1000, 1000));
+    generator.setTitle(tr("SVG Generator Example Drawing"));
+    generator.setDescription(tr("An SVG drawing created by the SVG Generator "
+                                "Example provided with Qt."));
+    QPainter painter;
+    painter.begin(&generator);
+    Scene->render(&painter);
+    painter.end();
 }
 //--------------------------------------------------------------------------------------------------
 
