@@ -92,6 +92,7 @@ interval& interval::Intersect(const interval& Y)
 
 bool interval::contains(double v)
 {
+    if(isEmpty == true) return false;
     if( v - inf > 1e-14 && sup-v > 1e-14) return true;
     return false;
 }

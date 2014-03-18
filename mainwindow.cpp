@@ -6,6 +6,7 @@ double dt = 0.05;
 double u1 = 0, u2 = 0;
 double xmin,xmax,ymin,ymax;
 
+
 //double xv=1.6,yv=0.3,thetav=0;
 QPen color[] = {QPen(Qt::blue),QPen(Qt::green),QPen(Qt::red), QPen(Qt::yellow), QPen(QColor(100,0,200)),QPen(QColor(100,20,100)),QPen((QColor(40,200,200)))};
 QBrush brushs[] = {QBrush(Qt::blue),QBrush(Qt::green),QBrush(Qt::red), QBrush(Qt::yellow),QBrush(QColor(100,0,200)), QBrush(QColor(100,20,100)),QBrush(QColor(40,200,200))};
@@ -123,7 +124,10 @@ void MainWindow::runLocalisation()
 
     sivia->epsilon = ui->EpsilonSpinBox->value();
     sivia->N_outliers = ui->N_outliers->value();
-    sivia->runAll(T0,&rob,distances);
+    sivia->runAll2(T0,&rob,distances);
+
+
+
 
     on_drawAllButton_clicked();
     checkIntegrity(T0);
@@ -133,7 +137,6 @@ void MainWindow::runLocalisation()
 //--------------------------------------------------------------------------------------------------
 // check if the true position of each robot belong the the corresponding box
 void MainWindow::checkIntegrity(vector<box> &T0){
-
     for(uint i = 0; i < T0.size(); i++){
         for(uint j = 0; j < rob.size(); j++){
             Robot* r = rob[j];

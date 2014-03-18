@@ -25,6 +25,8 @@ public:
     // Parametre de l'algorythme
     int N_outliers;
     float epsilon;
+    int nb_robots;
+    int dim_state;
 
     AContractorPtr contractor;
     int m;
@@ -47,6 +49,10 @@ public:
     void outerContractAll(box &X);
     void contractOneRobot(box &X, vector<box> &P, interval *distances, int robotNumber, bool direction);
 
+    box vector2box(vector<box> &T);
+    void runAll2(vector<box> &T0, vector<Robot *> *rob, vector<iMatrix> &distance);
+    void Ctrajectory(box &X, vector<Robot *> *rob);
+    vector<box> box2vector(box X, int boxSize);
 };
 
 #endif // SIVIA_H
