@@ -48,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //    ui->selectRob->addItem("Robot 6");
     ui->selectRob->setCurrentIndex(1);
 
-    ui->N_outliers->setMaximum(rob.size()-1);
+//    ui->N_outliers->setMaximum(rob.size()-1);
     ui->resultBar->setMaximum(0);
     ui->resultBox->setMaximum(0);
     drawRobots();
@@ -69,6 +69,7 @@ MainWindow::~MainWindow()
 
 // return the distance between the robot number n1 and n2 with a noise.
 // Outlier generation could be added in this part
+int nOut = 0;
 void MainWindow::generateDistances(int nb0){
     for(uint i = 0; i < nb0; i++){ // for each time step
 
@@ -78,6 +79,10 @@ void MainWindow::generateDistances(int nb0){
                 if(k == j) continue;
                 double trueDistance = hypot(rob[k]->x_v[i] - rob[j]->x_v[i], rob[k]->y_v[i] - rob[j]->y_v[i]);
                 int noise_rd =  rand();
+//                if( ((double) noise_rd/RAND_MAX) < 0.9){
+//                    trueDistance = 10000;
+//                    nOut++;
+//                }
                 double noise = -0.1 + 0.2*noise_rd/(RAND_MAX);
             //    qDebug() << noise_rd << "  " << -0.1 + 0.2*((double) noise_rd/(RAND_MAX));
                 dist[k][j] = interval(trueDistance + noise) + interval(-0.1,0.1);
@@ -85,6 +90,7 @@ void MainWindow::generateDistances(int nb0){
         }
         distances.push_back(dist);
     }
+    qDebug() << "noutlier"  << nOut;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -140,6 +146,7 @@ void MainWindow::checkIntegrity(vector<box> &T0){
     for(uint i = 0; i < T0.size(); i++){
         for(uint j = 0; j < rob.size(); j++){
             Robot* r = rob[j];
+            qDebug() << T0[i].Width();
             bool t = (T0[i][2*j+1].contains(r->x_v[i]) && T0[i][2*j+2].contains(r->y_v[i]));
             if(t == false){
                 qDebug() << "error the true position isn't inside the box at step " << i;
@@ -196,7 +203,8 @@ void MainWindow::drawCircles(int num_rob, int pos)
 // draw boxes which enclosed true position of the robot at time step <step>
 void MainWindow::drawBoxesState(int step){
     for(uint j = 0; j < rob.size(); j++){
-        Rworld->DrawBox(T0[step][2*j+1].inf,T0[step][2*j+1].sup,T0[step][2*j+2].inf,T0[step][2*j+2].sup,QPen(Qt::yellow),QBrush(Qt::NoBrush));
+        T0[step].Width();
+        Rworld->DrawBox(T0[step][2*j+1].inf,T0[step][2*j+1].sup,T0[step][2*j+2].inf,T0[step][2*j+2].sup,QPen(Qt::black),QBrush(Qt::NoBrush));
     }
 }
 

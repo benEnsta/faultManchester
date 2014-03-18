@@ -83,7 +83,7 @@ void SIVIA::fixPoint(box &X, iMatrix &distance){
 void SIVIA::Ctrajectory(box &X,vector<Robot*> *rob){
     int nb_state = rob->at(0)->x_v.size()-1;
     int step = 2*rob->size();
-    double err[] = {0.001, 0.01, 0.01, 0.01,0.01, 0.01,0.01, 0.01};
+    double err[] = {0.01, 0.01, 0.01, 0.01,0.01, 0.01,0.01, 0.01};
     for(int i = 1; i < nb_state; i++){ // i => indice du temps
         // X(k) = f(X(k-1))
         for(uint j =0; j < rob->size(); j++){ // j => indice Robot
