@@ -47,11 +47,14 @@ void Robot::Clock(double u1, double u2)
 // Generate a 8 as trajectori
 int Robot::generate8(double R, int nb_steps){
     cleanAll();
+    int nTour = 1;
     //double n = (int) ((2*M_PI*R) / (V0*dt));
-    double V0 = (4*M_PI*R) / (nb_steps*dt);
+    double V0 = (nTour*4*M_PI*R) / (nb_steps*dt);
     speed_v[0] = V0;
+    int sign = 1;
     for(uint i = 0; i < nb_steps ; i++){
-        double u1 = (i < 0.5*nb_steps) ? (V0/R): -(V0/R);
+        double u1 = sign*(V0/R);
+        if(i%(nb_steps/(2*nTour)) == 0) sign*=-1;
         Clock(u1,0);
     }
     return 0;

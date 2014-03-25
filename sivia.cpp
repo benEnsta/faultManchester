@@ -45,26 +45,34 @@ void SIVIA::runAll2(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distan
 
     int nb_step = T0.size();
     int step = rob->size()*2;
-    vector<box> L;
-
-    // Forward propagation
+    bool sortie=false;
     box X0 = vector2box(T0);
-    Ctrajectory(X0,rob);
-    for(uint i = 0; i < nb_step; i++){
-        for(uint j = 0; j < rob->size(); j++){
-            for(uint k = 0; k < rob->size(); k++){
-                if(j == k) continue;
-                box X(X0);
-                interval i1(distance[i][j][k]);
-                contractCircle(X[i*step + 2*j + 1],X[i*step + 2*j + 2],
-                               X[i*step + 2*k + 1],X[i*step + 2*k + 2],i1);
-                Ctrajectory(X,rob);
-                L.push_back(X);
+    while (!sortie)
+    {  box Xold(X0);
+        // Call the contracteur
+        vector<box> L;
+        // Forward propagation
+        Ctrajectory(X0,rob);
+        for(uint i = 0; i < nb_step; i++){
+            for(uint j = 0; j < rob->size(); j++){
+                for(uint k = 0; k < rob->size(); k++){
+                    if(j == k) continue;
+                    box X(X0);
+                    interval i1(distance[i][j][k]);
+                    contractCircle(X[i*step + 2*j + 1],X[i*step + 2*j + 2],
+                                   X[i*step + 2*k + 1],X[i*step + 2*k + 2],i1);
+                    Ctrajectory(X,rob);
+                    L.push_back(X);
+                }
             }
+            qDebug()<< "step number :" << i;
         }
-        qDebug()<< "step number :" << i;
+        C_q_in(X0, L.size()-N_outliers, L);
+        if (X0.IsEmpty())      sortie=true;
+        if (decrease(Xold,X0)<0.005) sortie=true;
     }
-    C_q_in(X0, L.size()-N_outliers, L);
+
+
     if(X0.IsEmpty()){
         qDebug() << "X is Empty";
     }
@@ -253,7 +261,7 @@ void SIVIA::contractCircle(interval& x0,interval& y0, interval& x1, interval& y1
     interval dx2pdy2=dx2+dy2;
     interval r2=Sqr(d);
 
-    Cegal(r2,dx2pdy2);
+    dx2pdy2 = r2 & dx2pdy2;
 
     Cplus(dx2pdy2,dx2,dy2,-1);
     Csqr(dy2,dy,-1);

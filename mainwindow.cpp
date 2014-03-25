@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+
 double t = 0;
 double dt = 0.05;
 double u1 = 0, u2 = 0;
@@ -34,17 +35,21 @@ MainWindow::MainWindow(QWidget *parent) :
     // ---------- Add 3 robots --------------
     rob.push_back(new Robot());
     ui->selectRob->addItem("Robot 0");
-    rob.push_back(new Robot(8,7, M_PI_2, 0.01));
+
+    rob.push_back(new Robot(8,7, -M_PI_4, 0.01));
     ui->selectRob->addItem("Robot 1");
-    rob.push_back(new Robot(-8,4, 0, 0.01));
+
+    rob.push_back(new Robot(-10,-2, 0, 0.01));
     ui->selectRob->addItem("Robot 2");
-    rob.push_back(new Robot(-5,-9,-M_PI_2, 0.01));
+
+    rob.push_back(new Robot(-5,-9,-M_PI_2, 0.000));
     ui->selectRob->addItem("Robot 3");
-    rob.push_back(new Robot(-5,7, 0.3, 0.001));
+
+    rob.push_back(new Robot(-5,7, 0.3, 0.01));
     ui->selectRob->addItem("Robot 4");
-//    rob.push_back(new Robot(-4.5,-4.7));
+//    rob.push_back(new Robot(-4.5,-4.7,-M_PI_4, 0.01));
 //    ui->selectRob->addItem("Robot 5");
-//    rob.push_back(new Robot(4.5,-3.5));
+//    rob.push_back(new Robot(4.5,-3.5,M_PI_4, 0.01));
 //    ui->selectRob->addItem("Robot 6");
     ui->selectRob->setCurrentIndex(1);
     ui->nbStep->setValue(100);
@@ -66,30 +71,68 @@ MainWindow::~MainWindow()
 }
 
 
+double generateRandomOutliers(int i, int j, int k, double dist){
+    int noise_rd =  rand();
+    if( ((double) noise_rd/RAND_MAX) > 0.99){
+        dist *= 10;
+        qDebug() << "outlier with " << i << " " << k << " "<< j ;
+    }
+//                if(i == 50 && j == 1 && k == 2){
+//                    trueDistance = 1000;
+//                }
 
-// return the distance between the robot number n1 and n2 with a noise.
-// Outlier generation could be added in this part
-void MainWindow::generateDistances(int nb0){
+    return dist;
+}
+
+// return the distance between the robot number n1 and n2 .
+void MainWindow::generateDistancesWithBrokenSensor(int nb0, int robNumber, int timeStep){
     int nOut = 0;
     for(uint i = 0; i < nb0; i++){ // for each time step
-
         iMatrix dist(rob.size(),vector<interval> (rob.size()));
         for(uint k = 0; k < rob.size(); k++){ // for each pair of robot i,j
             for(uint j = 0; j < rob.size(); j++){
                 if(k == j) continue;
                 double trueDistance = hypot(rob[k]->x_v[i] - rob[j]->x_v[i], rob[k]->y_v[i] - rob[j]->y_v[i]);
-                int noise_rd =  rand();
-                if( ((double) noise_rd/RAND_MAX) > 0.99){
-                    trueDistance *= 10;
-                    nOut++;
-                    qDebug() << "outlier with " << i << " " << k << " "<< j ;
-                }
-//                if(i == 50 && j == 1 && k == 2){
-//                    trueDistance = 1000;
-//                }
-                double noise = -0.09 + 0.18*noise_rd/(RAND_MAX);
 
+                double noise = -0.09 + 0.18*rand()/(RAND_MAX);
                 dist[k][j] = interval(trueDistance + noise) + interval(-0.1,0.1);
+            }
+        }
+        distances.push_back(dist);
+
+
+    }
+
+    for(uint i = timeStep; i < distances.size(); i++){
+        for(uint j = 0; j < rob.size(); j++){
+            if(i == j) continue;
+            distances[i][robNumber][j] = interval(oo);
+        }
+    }
+    qDebug() << "noutlier"  << nOut;
+}
+
+//-----------------------------------------------------------------------------------------------
+// return the distance between the robot number n1 and n2 with a noise.
+// Outlier generation could be added in this part
+void MainWindow::generateDistancesWithRandomOutliers(int nb0){
+    int nOut = 0;
+    for(uint i = 0; i < nb0; i++){ // for each time step
+        iMatrix dist(rob.size(),vector<interval> (rob.size()));
+        for(uint k = 0; k < rob.size(); k++){ // for each pair of robot i,j
+            for(uint j = 0; j < rob.size(); j++){
+                if(k == j) continue;
+                double trueDistance = hypot(rob[k]->x_v[i] - rob[j]->x_v[i], rob[k]->y_v[i] - rob[j]->y_v[i]);
+                double distance = trueDistance;
+                if( rand() > 0.99*RAND_MAX){
+                    distance *= 1.1;
+                    qDebug() << "outlier" << i << " " << k << " " << j;
+                }
+                if( distance != trueDistance) nOut++;
+                int noise_rd =  rand();
+                double noise = -0.09 + 0.18*noise_rd/(RAND_MAX);
+                dist[k][j] = interval(distance + noise) + interval(-0.1,0.1);
+
             }
         }
         distances.push_back(dist);
@@ -106,15 +149,73 @@ void MainWindow::generateData(int nb0){
     // Generate robot's trajectory
     for(uint i = 0; i < rob.size(); i++){
         Robot* r = rob[i];
-        r->generate8(2*i+1,nb0);
+        r->generate8(1.25*i+1,nb0);
     }
 
-    generateDistances(nb0);
+    if(ui->BrokenSensor->isChecked())
+        generateDistancesWithBrokenSensor(nb0,ui->selectRob->currentIndex(),30);
+    else
+        generateDistancesWithRandomOutliers(nb0);
     drawAllTrajectories();
 }
 
 
 
+void MainWindow::logRobot(int robNum){
+    QString filename("./log/");
+    filename += QString::number(robNum) + ".txt";
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+           return;
+    QTextStream out(&file);
+
+    int i = robNum;
+    // lower bound of [x] - x_ref
+    for(uint j = 0; j < T0.size(); j++){
+        out << QString::number(T0[j][2*i+1].inf-rob[i]->x_v[j]) << " ";
+    } out << "\n";
+    // upper bound of [x] - x_ref
+    for(uint j = 0; j < T0.size(); j++){
+        out << QString::number(T0[j][2*i+1].sup - rob[i]->x_v[j]) << " ";
+    } out << "\n";
+    // lower bound of [y] - y_ref
+    for(uint j = 0; j < T0.size(); j++){
+        out << QString::number(T0[j][2*i+2].inf -rob[i]->y_v[j]) << " ";
+    } out << "\n";
+    // upper bound of [y] - y_ref
+    for(uint j = 0; j < T0.size(); j++){
+        out << QString::number(T0[j][2*i+2].sup - rob[i]->y_v[j]) << " ";
+    } out << "\n";
+    // x_ref
+    for(uint j = 0; j < T0.size(); j++){
+        out << QString::number(rob[i]->x_v[j]) << " ";
+    } out << "\n";
+
+    // y_ref
+    for(uint j = 0; j < T0.size(); j++){
+        out << QString::number(rob[i]->y_v[j]) << " ";
+    } out << "\n";
+
+    // Area of the box
+    for(uint j = 0; j < T0.size(); j++){
+        double length = Width(T0[j][2*i+1])*Width(T0[j][2*i+2]);
+        out << QString::number(length) << " ";
+    } out << "\n";
+
+}
+
+//--------------------------------------------------------------------------------------------------
+void MainWindow::exportResults( const vector<box> &T ){
+
+    QDir dir("./log");
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+    for(uint i = 0; i < rob.size(); i++){
+        logRobot(i);
+
+    }
+}
 
 
 
@@ -127,9 +228,16 @@ void MainWindow::runLocalisation()
     T0 = vector<box>(step,box(interval(-oo,oo), 2*rob.size()));
 
     for(uint i = 0; i < rob.size(); i++){
-        T0[0][2*i+1] = interval(rob[i]->x_v[0]) + interval(-0.001, 0.001);
-        T0[0][2*i+2] = interval(rob[i]->y_v[0]) + interval(-0.001, 0.001);
+        T0[0][2*i+1] = interval(rob[i]->x_v[0]) + interval(-0.05, 0.05);
+        T0[0][2*i+2] = interval(rob[i]->y_v[0]) + interval(-0.05, 0.05);
     }
+
+    T0[0][1] = interval(rob[0]->x_v[0]) + interval(-0.05, 0.05);
+    T0[0][2] = interval(rob[0]->y_v[0]) + interval(-0.05, 0.05);
+
+    T0[0][7] = interval(rob[3]->x_v[0]) + interval(-0.05, 0.05);
+    T0[0][8] = interval(rob[3]->y_v[0]) + interval(-0.05, 0.05);
+
 
 
     sivia->epsilon = ui->EpsilonSpinBox->value();
@@ -140,6 +248,7 @@ void MainWindow::runLocalisation()
 
     on_drawAllButton_clicked();
     checkIntegrity(T0);
+    exportResults(T0);
     update_interface();
 }
 
@@ -307,8 +416,8 @@ void MainWindow::on_drawAllButton_clicked()
     for(uint i = 0; i < T0.size(); i++){
         drawBoxesState(i);
     }
-
-    drawOutliers();
+    if(!T0[0].IsEmpty())
+        drawOutliers();
 }
 
 //--------------------------------------------------------------------------------------------------

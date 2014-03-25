@@ -239,6 +239,19 @@
      <bool>true</bool>
     </property>
    </widget>
+   <widget class="QCheckBox" name="BrokenSensor">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>460</y>
+      <width>121</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Broken Sensor</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
