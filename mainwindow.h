@@ -47,6 +47,7 @@ public:
     void drawOutliers();
     void exportResults(const vector<box> &T);
     void logRobot(int robNum);
+    void generateDistancesWith2BrokenSensors(int nb0);
 private:
     vector<box> T0;
 private slots:
