@@ -4,45 +4,24 @@
 extern double dt;
 
 
+
 SIVIA::SIVIA() : QObject()
 {
     N_outliers = 0;
 }
-//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
 SIVIA::~SIVIA(){
 }
 
+//---------------------------------------------------------------------------------------------
+/**
+ * @brief Main Contractor
+ *
+ * @param T0 : vector of boxes. each box contains has a dimention of n*nr
+ * @param rob: pointor to the vector of robots used by the contractor CTrajectory
+ * @return vector<box>  list of boxes of size <boxSize>
+ */
 
-//---------------------------------------------------------------------------
-void SIVIA::runAll(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distance){
-    int ny = distance.size();
-
-    double err[] = {0.000, 0.01, 0.01, 0.01,0.01, 0.01,0.01, 0.01};
-    // Forward propagation
-    for(int i = 1; i < ny; i++){ // i => indice du temps
-        // X(k) = f(X(k-1))
-        for(uint j =0; j < rob->size(); j++){ // j => indice Robot
-            Robot* r = rob->at(j);
-            Incremente(T0[i][2*j+1],T0[i][2*j+2], T0[i-1][2*j+1], T0[i-1][2*j+2], r->theta_v[i-1],r->speed_v[i-1],err[j]);
-        }
-        // ******************************************************************************
-        // HERE CALL THE CONTRACTOR TO FIND X_hat = G⁻1(Y) and make X = Inter(X, X_hat)
-        // ******************************************************************************
-//        fixPoint(T0[i],distance[i]);
-    }
-
-    // Backward propagation
-    for(int i = ny-1; i > 0; i--){ // i => indice du temps
-        for(uint j =0; j < rob->size(); j++){ // j => indice Robot
-            Robot* r = rob->at(j);
-            Decremente(T0[i][2*j+1],T0[i][2*j+2], T0[i-1][2*j+1], T0[i-1][2*j+2], r->theta_v[i-1],r->speed_v[i-1],err[j]);
-        }
-    }
-}
-
-
-
-//---------------------------------------------------------------------------
 void SIVIA::runAll2(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distance){
 
     int nb_step = T0.size();
@@ -83,57 +62,14 @@ void SIVIA::runAll2(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distan
 }
 
 
-void SIVIA::contractAll(box & X, int i, vector<Robot*> *rob, vector<iMatrix> &distance){
-//    vector<box> L;
-    int step = rob->size()*2;
-    for(uint j = 0; j < rob->size(); j++){
-        for(uint k = 0; k < rob->size(); k++){
-            if(j == k) continue;
-//            box X(X0);
-            interval i1 = distance[i][j][k];
-            contractCircle(X[i*step + 2*j + 1],X[i*step + 2*j + 2],
-                           X[i*step + 2*k + 1],X[i*step + 2*k + 2],i1);
-//            Ctrajectory(X,rob);
-//            L.push_back(X);
-        }
-    }
-}
 
-//---------------------------------------------------------------------------
-void SIVIA::runAll3(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distance){
-
-    int nb_step = T0.size();
-    int step = rob->size()*2;
-    bool sortie=false;
-    box X0 = vector2box(T0);
-    while (!sortie)
-    {  box Xold(X0);
-        // Call the contracteur
-        vector<box> L;
-        // Forward propagation
-        Ctrajectory(X0,rob);
-        for(uint i = 0; i < nb_step; i++){
-            box X(X0);
-            contractAll(X,i,rob, distance);
-            Ctrajectory(X,rob);
-            L.push_back(X);
-        }
-        C_q_in(X0, L.size()-N_outliers, L);
-        if (X0.IsEmpty())      sortie=true;
-        if (decrease(Xold,X0)<0.1e-7) sortie=true;
-    }
-
-
-    if(X0.IsEmpty()){
-        qDebug() << "X is Empty";
-    }
-    T0 = box2vector(X0,2*rob->size());
-}
-
-//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+// This function identifies outliers.
+// For each measurment we apply the contractor <contractCircle> with an initial box which contains the true position of the robot.
+// if the resulting box is empty, the measurment is faulty. (cf theorem 3)
 vector<int> SIVIA::findOutliers(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distance){
-    int nb_step = T0.size();
-    int step = rob->size()*2;
+    int nb_step = T0.size();        // total number of time step
+    int step = rob->size()*2;       //
     box X0 = vector2box(T0);
 
     vector<int> out;
@@ -145,6 +81,7 @@ vector<int> SIVIA::findOutliers(vector<box>& T0,vector<Robot*> *rob, vector<iMat
                 interval i1(distance[i][j][k]);
                 contractCircle(X[i*step + 2*j + 1],X[i*step + 2*j + 2],
                                X[i*step + 2*k + 1],X[i*step + 2*k + 2],i1);
+                Ctrajectory(X,rob);
                 if(X.IsEmpty()){
                     qDebug() << "outliers " << i << " "<< j << " "<< k << " ";
                     out.push_back(i); out.push_back(j); out.push_back(k);
@@ -154,28 +91,18 @@ vector<int> SIVIA::findOutliers(vector<box>& T0,vector<Robot*> *rob, vector<iMat
     }
 
     return out;
-
 }
 
-//---------------------------------------------------------------------------
-void SIVIA::fixPoint(box &X, iMatrix &distance){
-    bool sortie=false;
-    while (!sortie)
-    {  box Xold(X);
-        // Call the contracteur
-        outerContractAll2(X,distance);
-        if (X.IsEmpty())      sortie=true;
-        if (decrease(Xold,X)<0.005) sortie=true;
-    }
-}
 
-//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+// Forward / Backward contractor for the whole trajectory of each robot
+
 void SIVIA::Ctrajectory(box &X,vector<Robot*> *rob){
     int nb_state = rob->at(0)->x_v.size()-1;
     int step = 2*rob->size();
-//    double err[] = {0.01, 0.01, 0.01, 0.01,0.01, 0.01,0.01, 0.01};
+
+    // Forward propagation
     for(int i = 1; i < nb_state; i++){ // i => indice du temps
-        // X(k) = f(X(k-1))
         for(uint j =0; j < rob->size(); j++){ // j => indice Robot
             Robot* r = rob->at(j);
             Incremente(X[i*step + 2*j + 1],X[i*step + 2*j + 2],
@@ -194,73 +121,27 @@ void SIVIA::Ctrajectory(box &X,vector<Robot*> *rob){
         }
     }
 }
-//---------------------------------------------------------------------------
-
-/**
- * @brief this function splits a <boxSize>*r dimentionnal box into a list of r boxes of size <boxSize>
- *
- * @param X : box to be transformed
- * @param boxSize number of dimention of the new box
- * @return vector<box>  list of boxes of size <boxSize>
- */
-vector<box> SIVIA::box2vector(box X, int boxSize){
-    vector<box> list(X.dim/(boxSize));
-    for(uint i = 0; i < X.dim/boxSize; i++){
-        box Xtmp(boxSize);
-        for(uint j = 1; j <= boxSize; j++){
-            Xtmp[j] = X[boxSize*i+j];
-        }
-        list[i] = Xtmp;
-    }
-    return list;
-}
-
-//---------------------------------------------------------------------------
-
-/**
- * @brief this function merges a list of r boxes of size 2 into a box of size 2*r
- *
- * @param X : box to be transformed
- * @return vector<box>  list with boxes
- */
-box SIVIA::vector2box(vector<box> & list){
-    if(list.size() > 0){
-        int dim = list[0].dim;
-        box X(list.size()*dim);
-        for(uint i = 0; i < list.size(); i++){
-            for(uint j = 1; j <= dim; j++)
-            X[i*dim+j] = list[i][j];
-
-        }
-        return X;
-    } else {
-        return box();
-    }
 
 
-}
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+//--------------------------    BASIC CONTRACTORS  --------------------------------------------
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------
-void SIVIA::Incremente(box& X,box &X0, double theta, double vit, double err){
-    for(uint i = 0; i < X0.dim*0.5; i++){
-        Incremente(X[2*i+1], X[2*i+2], X0[2*i+1], X0[2*i+2],theta, vit, err);
-    }
-}
 
-//---------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------------------------
+// Compute X1 = f(X) => forward
 void SIVIA::Incremente(interval& X1,interval& Y1, interval& X,interval& Y,
                        double theta,double vit, double noise)
 {
     X1    = Inter(X1, X     + dt*cos(theta)*vit + interval(-noise, noise)) ;
          Y1    = Inter(Y1, Y     + dt*sin(theta)*vit + interval(-noise, noise)) ;
 }
-//---------------------------------------------------------------------------
-void SIVIA::Decremente(box &X, box &X0, double theta, double vit, double err){
-    for(int i = 0; i < X0.dim*0.5; i++){
-        Decremente(X[2*i+1], X[2*i+2], X0[2*i+1], X0[2*i+2],theta, vit,err);
-    }
-}
-//----------------------------------------------------------------------
+
+//---------------------------------------------------------------------------------------------
+// compute X = f^-1(X1) => backward
 void SIVIA::Decremente(interval& X1,interval& Y1, interval& X,interval& Y,
                        double theta,double V, double err)
 {
@@ -268,42 +149,12 @@ void SIVIA::Decremente(interval& X1,interval& Y1, interval& X,interval& Y,
     interval dy = dt*sin(theta)*V;// + interval(-err,err);
     Cplus(X1, dx, X, -1);// - interval(-0.005, 0.005);
     Cplus(Y1, dy, Y, -1);// - interval(-0.005, 0.005);
-//    interval error(-0.005, 0.005), error2(error);
-//    Cplus(X, X, error, -1);// - interval(-0.005, 0.005);
-//    Cplus(Y, Y, error2, -1);// - interval(-0.005, 0.005);
+
 }
 
 
-//-----------------------------------------------------------------
-//-------------------  CONTRACTOR           -----------------------
-//-----------------------------------------------------------------
-
-
-//-----------------------------------------------------------------
-//-------------------  CONTRACTOR ALL      -----------------------
-//-----------------------------------------------------------------
-
-void SIVIA::outerContractAll2(box& X, iMatrix &distances){
-
-    vector<box> L;
-    for(uint r = 1; r < 0.5*X.dim; r++){
-        for(uint i = 0; i < 0.5*X.dim; i++){
-            box X1(X);
-            if(i == r) continue;
-            interval i1(distances[r][i]);
-            contractCircle(X1[2*r+1],X1[2*r+2],X1[2*i+1],X1[2*i+2],i1);
-            if(X1.IsEmpty()) qDebug() << "empty result" << i << " " << r;
-            L.push_back(X1);
-        }
-    }
-    C_q_in(X, L.size()-N_outliers, L);
-}
-
-//-----------------------------------------------------------------
-//-------------------  BASICS CONTRACTOR      ---------------------
-//-----------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
 void SIVIA::contractCircle(interval& x0,interval& y0, interval& x1, interval& y1, interval& d){
-
 
     // Contractor : (x0-x1)^2+(y0-y1)^2 = d^2
     interval dx=x0 - x1;
@@ -323,6 +174,7 @@ void SIVIA::contractCircle(interval& x0,interval& y0, interval& x1, interval& y1
 
 }
 
+//---------------------------------------------------------------------------------------------
 void SIVIA::contractCircle(interval& x0,interval& y0, double x1, double y1, interval& d){
 
     //qDebug() << "version avec centre double";
@@ -344,3 +196,52 @@ void SIVIA::contractCircle(interval& x0,interval& y0, double x1, double y1, inte
     Cmoins(dy,y0,y1,-1);
 
 }
+
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+//--------------------------    TOOL FUNCTIONS     --------------------------------------------
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+
+/**
+ * @brief this function splits a <boxSize>*r dimentionnal box into a list of r boxes of size <boxSize>
+ *
+ * @param X : box to be transformed
+ * @param boxSize number of dimention of the new box
+ * @return vector<box>  list of boxes of size <boxSize>
+ */
+vector<box> SIVIA::box2vector(box X, int boxSize){
+    vector<box> list(X.dim/(boxSize));
+    for(uint i = 0; i < X.dim/boxSize; i++){
+        box Xtmp(boxSize);
+        for(uint j = 1; j <= boxSize; j++){
+            Xtmp[j] = X[boxSize*i+j];
+        }
+        list[i] = Xtmp;
+    }
+    return list;
+}
+
+//----------------------------------------------------------------------------------------------
+/**
+ * @brief this function merges a list of r boxes of size 2 into a box of size 2*r
+ *
+ * @param X : box to be transformed
+ * @return vector<box>  list with boxes
+ */
+box SIVIA::vector2box(vector<box> & list){
+    if(list.size() > 0){
+        int dim = list[0].dim;
+        box X(list.size()*dim);
+        for(uint i = 0; i < list.size(); i++){
+            for(uint j = 1; j <= dim; j++)
+            X[i*dim+j] = list[i][j];
+
+        }
+        return X;
+    } else {
+        return box();
+    }
+}
+
+

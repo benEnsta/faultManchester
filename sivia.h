@@ -52,6 +52,7 @@ public:
     vector<int> findOutliers(vector<box> &T0, vector<Robot *> *rob, vector<iMatrix> &distance);
     void runAll3(vector<box> &T0, vector<Robot *> *rob, vector<iMatrix> &distance);
     void contractAll(box &X, int i, vector<Robot *> *rob, vector<iMatrix> &distance);
+    void fixPoint(interval &x0, interval &y0, interval &x1, interval &y1, interval &distance);
 };
 
 #endif // SIVIA_H

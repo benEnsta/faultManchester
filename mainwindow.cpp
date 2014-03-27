@@ -143,10 +143,8 @@ void MainWindow::breakSensor(int robNumber, int intialStep, int finalStep){
 // Outlier generation could be added in this part
 void MainWindow::generateDistancesWithRandomOutliers(int nb0){
 
-    // generate true data
-    generateDistancesWithoutOutliers(nb0);
 
-
+    distances.clear(); // remove previous distances.
 
     int nOut = 0;
     for(uint i = 0; i < nb0; i++){ // for each time step
@@ -170,6 +168,11 @@ void MainWindow::generateDistancesWithRandomOutliers(int nb0){
         distances.push_back(dist);
     }
     qDebug() << "noutlier"  << nOut;
+    srand (time(NULL));
+    for(int t=0;t<10;t++)
+    {
+        qDebug() << rand() % 100;
+    }
 }
 
 
@@ -223,11 +226,12 @@ void MainWindow::generateData(int steps_per_tour, int numberOfStep ){
         r->generate8(1.25*i+1,steps_per_tour,numberOfStep);
     }
 
+    // Generate distances without faults.
     generateDistancesWithoutOutliers(numberOfStep);
 
     switch(ui->testCases->currentIndex()){
     case 0:
-//        generateDistancesWithoutOutliers(numberOfStep);
+//        nothing to do;
         break;
     case 1:
         generateDistancesWithRandomOutliers(numberOfStep);
