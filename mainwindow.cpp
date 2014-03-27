@@ -22,15 +22,13 @@ MainWindow::MainWindow(QWidget *parent) :
     // set up display
     float width = 15;
     xmin=-width;xmax=width;    ymin=-width;ymax=width;
-//    xmin=-13;xmax=1;    ymin=-13;ymax=1;
-    //xmin=-1.2;xmax=2.8;    ymin=2.2;ymax=5.8;
     Rworld=new repere(this,ui->graphicsView_World,xmin,xmax,ymin,ymax);
     sivia = new SIVIA();
 
     sivia->N_outliers = 0;
 
 
-    // ---------- Add 3 robots --------------
+    // ---------- Add robots here --------------
     rob.push_back(new Robot());
     ui->selectRob->addItem("Robot 0");
 
@@ -50,13 +48,17 @@ MainWindow::MainWindow(QWidget *parent) :
 //    ui->selectRob->addItem("Robot 5");
 //    rob.push_back(new Robot(4.5,-3.5,M_PI_4, 0.01));
 //    ui->selectRob->addItem("Robot 6");
+
+
+    // set interface parameters
     ui->selectRob->setCurrentIndex(1);
     ui->nbStep->setValue(150);
-//    ui->N_outliers->setMaximum(rob.size()-1);
     ui->resultBar->setMaximum(0);
     ui->resultBox->setMaximum(0);
     drawRobots();
-    Rworld->Save("SituationInitial.png");
+
+
+    // Init random number generator
     srand(0);
 }
 
@@ -75,22 +77,11 @@ MainWindow::~MainWindow()
 //--------------------------   Data generation functions -----------------------------------------------
 //------------------------------------------------------------------------------------------------------
 
-
-
-
-
-double generateRandomOutliers(int i, int j, int k, double dist){
-    int noise_rd =  rand();
-    if( ((double) noise_rd/RAND_MAX) > 0.99){
-        dist *= 10;
-        qDebug() << "outlier with " << i << " " << k << " "<< j ;
-    }
-//                if(i == 50 && j == 1 && k == 2){
-//                    trueDistance = 1000;
-//                }
-
-    return dist;
-}
+//------------------------------------------------------------------------------------------------------
+// Here, distances are generated without outliers.
+// A noise is added to the true distances.
+// param :
+//------------------------------------------------------------------------------------------------------
 
 void MainWindow::generateDistancesWithoutOutliers(int nbSteps){
     for(uint i = 0; i < nbSteps; i++){ // for each time step
@@ -99,8 +90,12 @@ void MainWindow::generateDistancesWithoutOutliers(int nbSteps){
             for(uint j = 0; j < rob.size(); j++){
                 if(k == j) continue;
                 double trueDistance = hypot(rob[k]->x_v[i] - rob[j]->x_v[i], rob[k]->y_v[i] - rob[j]->y_v[i]);
+                // ------------------------------------------------------
+                // Here the noise is generated and added.
+                // You could change the parameters of the noise.
                 int noise_rd =  rand();
                 double noise = -0.09 + 0.18*noise_rd/(RAND_MAX);
+                // ------------------------------------------------------
                 dist[k][j] = interval(trueDistance + noise) + interval(-0.1,0.1);
 
             }
@@ -109,20 +104,12 @@ void MainWindow::generateDistancesWithoutOutliers(int nbSteps){
     }
 }
 
-// return the distance between the robot number n1 and n2 .
-void MainWindow::generateDistancesWithBrokenSensor(int nb0, int robNumber, int intialStep, int finalStep){
-    int nOut = 0;
-    generateDistancesWithoutOutliers(nb0);
-
-    for(uint i = intialStep; i < finalStep; i++){
-        for(uint j = 0; j < rob.size(); j++){
-//            if(i == j) continue;
-            distances[i][robNumber][j] = interval(0,0);
-            nOut++;
-        }
-    }
-    qDebug() << "noutlier"  << nOut;
-}
+//-----------------------------------------------------------------------------------------------
+// Here distances between <robNumber> and the others are set to 0 between <intialStep>
+// and <finalStep>.
+// With the redundancy of sensor, even if the measurment between <robNumber> and robot <j> is faulty
+// the measurment between the robot <j> and <robNumber> is good.
+//------------------------------------------------------------------------------------------------------
 
 void MainWindow::breakSensor(int robNumber, int intialStep, int finalStep){
 
@@ -131,6 +118,7 @@ void MainWindow::breakSensor(int robNumber, int intialStep, int finalStep){
         for(uint j = 0; j < rob.size(); j++){
             if(j == robNumber) continue;
             distances[i][robNumber][j] = interval(0,0);
+            //distances[i][j][robNumber] = interval(0,0);
             nOut++;
         }
     }
@@ -139,8 +127,13 @@ void MainWindow::breakSensor(int robNumber, int intialStep, int finalStep){
 
 
 //-----------------------------------------------------------------------------------------------
-// return the distance between the robot number n1 and n2 with a noise.
-// Outlier generation could be added in this part
+// Generate distances with outliers randomly choosen
+//------------------------------------------------------------------------------------------------
+/**
+ * @brief MGenerate distances with outliers randomly choosen
+ *
+ * @param nb0 : Total number of steps used for the simultation
+ */
 void MainWindow::generateDistancesWithRandomOutliers(int nb0){
 
 
@@ -154,10 +147,15 @@ void MainWindow::generateDistancesWithRandomOutliers(int nb0){
                 if(k == j) continue;
                 double trueDistance = hypot(rob[k]->x_v[i] - rob[j]->x_v[i], rob[k]->y_v[i] - rob[j]->y_v[i]);
                 double distance = trueDistance;
+
+                // ------------------------------------------------------
+                // Here an outliers is generated with a propability of 1%
+                // The true distance is muliplied by 1.1
                 if( rand() > 0.99*RAND_MAX){
                     distance *= 1.1;
                     qDebug() << "outlier" << i << " " << k << " " << j;
                 }
+                // ------------------------------------------------------
                 if( distance != trueDistance) nOut++;
                 int noise_rd =  rand();
                 double noise = -0.09 + 0.18*noise_rd/(RAND_MAX);
@@ -167,55 +165,17 @@ void MainWindow::generateDistancesWithRandomOutliers(int nb0){
         }
         distances.push_back(dist);
     }
-    qDebug() << "noutlier"  << nOut;
-    srand (time(NULL));
-    for(int t=0;t<10;t++)
-    {
-        qDebug() << rand() % 100;
-    }
 }
 
 
-//-----------------------------------------------------------------------------------------------
-// return the distance between the robot number n1 and n2 with a noise.
-// Outlier generation could be added in this part
-void MainWindow::generateDistancesWith2BrokenSensors(int nb0){
-    int nOut = 0;
-    for(uint i = 0; i < nb0; i++){ // for each time step
-        iMatrix dist(rob.size(),vector<interval> (rob.size()));
-        for(uint k = 0; k < rob.size(); k++){ // for each pair of robot i,j
-            for(uint j = 0; j < rob.size(); j++){
-                if(k == j) continue;
-                double trueDistance = hypot(rob[k]->x_v[i] - rob[j]->x_v[i], rob[k]->y_v[i] - rob[j]->y_v[i]);
-
-                double noise = -0.09 + 0.18*rand()/(RAND_MAX);
-                dist[k][j] = interval(trueDistance + noise) + interval(-0.1,0.1);
-            }
-        }
-        distances.push_back(dist);
-    }
-
-    // sensor 1 is broken after step 30
-    for(uint i = 30; i < distances.size(); i++){
-        for(uint j = 0; j < rob.size(); j++){
-            if(i == j) continue;
-            distances[i][1][j] = interval(oo);
-            nOut++;
-        }
-    }
-    // Sensor 2 is broken between step 60 and 80
-    for(uint i = 60; i < 80; i++){
-        for(uint j = 0; j < rob.size(); j++){
-            if(i == j) continue;
-            distances[i][2][j] = interval(oo);
-            nOut++;
-        }
-    }
-
-    qDebug() << "noutlier"  << nOut;
-}
 //--------------------------------------------------------------------------------------------------
-// Generate trajectories for all robot and all distances between them
+/**
+ * @brief Generate trajectories for all robot and all distances between them
+ * Datas for test cases are generated here in the switch statement.
+ *
+ * @param numberOfStep : Total number of steps used for the simultation
+ * @param steps_per_tour: Number of steps used to make a full revolution in the 8
+ */
 void MainWindow::generateData(int steps_per_tour, int numberOfStep ){
 
     // Clean previous datas
@@ -229,6 +189,8 @@ void MainWindow::generateData(int steps_per_tour, int numberOfStep ){
     // Generate distances without faults.
     generateDistancesWithoutOutliers(numberOfStep);
 
+
+    // Test Case generation.
     switch(ui->testCases->currentIndex()){
     case 0:
 //        nothing to do;
@@ -255,6 +217,12 @@ void MainWindow::generateData(int steps_per_tour, int numberOfStep ){
 
 
 
+
+/**
+ * @brief Create a file log which contains the data of the robot number <robNum>
+ *
+ * @param robNum : number of the robot
+ */
 void MainWindow::logRobot(int robNum){
     QString filename("./log/");
     filename += QString::number(robNum) + ".txt";
@@ -299,6 +267,10 @@ void MainWindow::logRobot(int robNum){
 }
 
 //--------------------------------------------------------------------------------------------------
+/**
+ * @brief export all trajectory of all robot into the directory "./log"
+ * @param T not used here
+ */
 void MainWindow::exportResults( const vector<box> &T ){
 
     QDir dir("./log");
@@ -307,7 +279,6 @@ void MainWindow::exportResults( const vector<box> &T ){
     }
     for(uint i = 0; i < rob.size(); i++){
         logRobot(i);
-
     }
 }
 

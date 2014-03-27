@@ -33,7 +33,7 @@ void Robot::Clock(double u1, double u2)
     double theta = theta_v.back();
     double vit = speed_v.back();
 
-    double r_noise =0; //-0.5*0.8*noise + 2*0.5*0.8*noise*( (double) rand()/RAND_MAX);
+    double r_noise = -0.5*0.7*noise + 2*0.5*0.7*noise*( (double) rand()/RAND_MAX);
     x=x+dt*vit*cos(theta) + r_noise;
     y=y+dt*vit*sin(theta) + r_noise;
     theta=theta+dt*u1;
