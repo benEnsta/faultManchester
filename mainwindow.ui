@@ -205,6 +205,11 @@
       <string>Test Case 3</string>
      </property>
     </item>
+    <item>
+     <property name="text">
+      <string>Test Case 4</string>
+     </property>
+    </item>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
