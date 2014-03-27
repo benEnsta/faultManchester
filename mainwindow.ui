@@ -14,19 +14,6 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QLabel" name="label_Epsilon">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>0</y>
-      <width>71</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Accuracy</string>
-    </property>
-   </widget>
    <widget class="QGraphicsView" name="graphicsView_World">
     <property name="geometry">
      <rect>
@@ -35,34 +22,6 @@
       <width>721</width>
       <height>721</height>
      </rect>
-    </property>
-   </widget>
-   <widget class="QDoubleSpinBox" name="EpsilonSpinBox">
-    <property name="geometry">
-     <rect>
-      <x>80</x>
-      <y>0</y>
-      <width>71</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="locale">
-     <locale language="English" country="UnitedStates"/>
-    </property>
-    <property name="decimals">
-     <number>4</number>
-    </property>
-    <property name="minimum">
-     <double>0.010000000000000</double>
-    </property>
-    <property name="maximum">
-     <double>2.500000000000000</double>
-    </property>
-    <property name="singleStep">
-     <double>0.100000000000000</double>
-    </property>
-    <property name="value">
-     <double>0.800000000000000</double>
     </property>
    </widget>
    <widget class="QGraphicsView" name="graphicsView">
@@ -175,9 +134,9 @@
     <property name="geometry">
      <rect>
       <x>80</x>
-      <y>24</y>
+      <y>10</y>
       <width>71</width>
-      <height>21</height>
+      <height>20</height>
      </rect>
     </property>
     <property name="maximum">
@@ -188,9 +147,9 @@
     <property name="geometry">
      <rect>
       <x>11</x>
-      <y>24</y>
+      <y>10</y>
       <width>71</width>
-      <height>21</height>
+      <height>20</height>
      </rect>
     </property>
     <property name="text">
@@ -248,6 +207,11 @@
       <height>26</height>
      </rect>
     </property>
+    <item>
+     <property name="text">
+      <string>Test Case 0</string>
+     </property>
+    </item>
     <item>
      <property name="text">
       <string>Test Case 1</string>

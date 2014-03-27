@@ -29,7 +29,6 @@ MainWindow::MainWindow(QWidget *parent) :
     sivia = new SIVIA();
 
     sivia->N_outliers = 0;
-    sivia->epsilon = ui->EpsilonSpinBox->value();
 
 
     // ---------- Add 3 robots --------------
@@ -85,6 +84,25 @@ double generateRandomOutliers(int i, int j, int k, double dist){
     return dist;
 }
 
+void MainWindow::generateDistancesWithoutOutliers(int nb0){
+    int nOut = 0;
+    for(uint i = 0; i < nb0; i++){ // for each time step
+        iMatrix dist(rob.size(),vector<interval> (rob.size()));
+        for(uint k = 0; k < rob.size(); k++){ // for each pair of robot i,j
+            for(uint j = 0; j < rob.size(); j++){
+                if(k == j) continue;
+                double trueDistance = hypot(rob[k]->x_v[i] - rob[j]->x_v[i], rob[k]->y_v[i] - rob[j]->y_v[i]);
+                int noise_rd =  rand();
+                double noise = -0.09 + 0.18*noise_rd/(RAND_MAX);
+                dist[k][j] = interval(trueDistance + noise) + interval(-0.1,0.1);
+
+            }
+        }
+        distances.push_back(dist);
+    }
+    qDebug() << "noutlier"  << nOut;
+}
+
 // return the distance between the robot number n1 and n2 .
 void MainWindow::generateDistancesWithBrokenSensor(int nb0, int robNumber, int timeStep){
     int nOut = 0;
@@ -106,8 +124,8 @@ void MainWindow::generateDistancesWithBrokenSensor(int nb0, int robNumber, int t
 
     for(uint i = timeStep; i < distances.size(); i++){
         for(uint j = 0; j < rob.size(); j++){
-            if(i == j) continue;
-            distances[i][robNumber][j] = interval(oo);
+//            if(i == j) continue;
+            distances[i][robNumber][j] = interval(0,0);
             nOut++;
         }
     }
@@ -196,12 +214,15 @@ void MainWindow::generateData(int nb0){
 
     switch(ui->testCases->currentIndex()){
     case 0:
-        generateDistancesWithRandomOutliers(nb0);
+        generateDistancesWithoutOutliers(nb0);
         break;
     case 1:
-        generateDistancesWithBrokenSensor(nb0,ui->selectRob->currentIndex(),30);
+        generateDistancesWithRandomOutliers(nb0);
         break;
     case 2:
+        generateDistancesWithBrokenSensor(nb0,ui->selectRob->currentIndex(),30);
+        break;
+    case 3:
         generateDistancesWith2BrokenSensors(nb0);
         break;
     }
@@ -275,6 +296,8 @@ void MainWindow::exportResults( const vector<box> &T ){
 void MainWindow::runLocalisation()
 {
 
+
+    // Initialize the trajectories vector ( <z> in the paper )
     int step = distances.size();
     T0 = vector<box>(step,box(interval(-oo,oo), 2*rob.size()));
 
@@ -283,14 +306,7 @@ void MainWindow::runLocalisation()
         T0[0][2*i+2] = interval(rob[i]->y_v[0]) + interval(-0.05, 0.05);
     }
 
-//    for(uint i = 0; i < rob.size(); i++){
-//        T0[step-1][2*i+1] = interval(rob[i]->x_v[step-1]) + interval(-0.5, 0.5);
-//        T0[step-1][2*i+2] = interval(rob[i]->y_v[step-1]) + interval(-0.5, 0.5);
-//    }
 
-
-
-    sivia->epsilon = ui->EpsilonSpinBox->value();
     sivia->N_outliers = ui->N_outliers->value();
     sivia->runAll2(T0,&rob,distances);
 
@@ -308,10 +324,6 @@ void MainWindow::checkIntegrity(vector<box> &T0){
     for(int i = T0.size()-1; i >= 0; i--){
         for(uint j = 0; j < rob.size(); j++){
             Robot* r = rob[j];
-//            qDebug() << T0[i].Width();
-//            if(j == 2){
-//                qDebug() << "X " << T0[i][2*j+1] << " Y " << T0[i][2*j+2];
-//            }
             bool t = (T0[i][2*j+1].contains(r->x_v[i]) && T0[i][2*j+2].contains(r->y_v[i]));
             if(t == false){
                 qDebug() << "error the true position isn't inside the box at step " << i << "and robot " << j;
@@ -328,6 +340,7 @@ void MainWindow::checkIntegrity(vector<box> &T0){
 //======================================================================================================
 //======================================================================================================
 
+//--------------------------------------------------------------------------------------------------
 // Draw all robots at time <step>
 void MainWindow::drawRobots(int step){
     for(uint i = 0; i < rob.size(); i++){
@@ -335,6 +348,7 @@ void MainWindow::drawRobots(int step){
     }
 }
 
+//--------------------------------------------------------------------------------------------------
 // Draw the trajectory of the robot number <robot_num>
 void MainWindow::drawTrajectory(int robot_num){
     Robot* r = rob[robot_num];
@@ -345,6 +359,7 @@ void MainWindow::drawTrajectory(int robot_num){
         }
     }
 }
+//--------------------------------------------------------------------------------------------------
 // Draw trajectory of all robots
 void MainWindow::drawAllTrajectories(){
     for(uint i = 0; i < rob.size(); i++){
@@ -352,6 +367,7 @@ void MainWindow::drawAllTrajectories(){
     }
 }
 
+//--------------------------------------------------------------------------------------------------
 // Draw distances between the robot <num_rob> to all others at the time step <pos>
 void MainWindow::drawCircles(int num_rob, int pos)
 {
@@ -366,6 +382,7 @@ void MainWindow::drawCircles(int num_rob, int pos)
     }
 }
 
+//--------------------------------------------------------------------------------------------------
 // draw boxes which enclosed true position of the robot at time step <step>
 void MainWindow::drawBoxesState(int step){
     for(uint j = 0; j < rob.size(); j++){
@@ -373,7 +390,8 @@ void MainWindow::drawBoxesState(int step){
     }
 }
 
-
+//--------------------------------------------------------------------------------------------------
+// Color box which contains wrong measurment
 void MainWindow::drawOutliers(){
     int size = outliers.size()/3;
     for(uint i = 0; i < size; i++){
@@ -382,9 +400,6 @@ void MainWindow::drawOutliers(){
         int idy = outliers[3*i+2];
         Rworld->DrawBox(T0[step][2*idx+1].inf,T0[step][2*idx+1].sup,T0[step][2*idx+2].inf,T0[step][2*idx+2].sup,QPen(Qt::darkMagenta),QBrush(Qt::red));
         Rworld->DrawBox(T0[step][2*idy+1].inf,T0[step][2*idy+1].sup,T0[step][2*idy+2].inf,T0[step][2*idy+2].sup,QPen(Qt::green),QBrush(Qt::NoBrush));
-
-//        Rworld->DrawLine(Center(T0[step][2*idx+1]),Center(T0[step][2*idx+2]),
-//                Center(T0[step][2*idy+1]), Center(T0[step][2*idy+2]),QPen(Qt::red));
     }
 }
 
@@ -419,11 +434,6 @@ void MainWindow::on_N_outliers_editingFinished()
     sivia->N_outliers = ui->N_outliers->value();
 }
 //--------------------------------------------------------------------------------------------------
-void MainWindow::on_EpsilonSpinBox_editingFinished()
-{
-    sivia->epsilon = ui->EpsilonSpinBox->value();
-}
-//--------------------------------------------------------------------------------------------------
 void MainWindow::on_clearButtton_clicked()
 {
     Rsivia->Clean();
@@ -456,8 +466,6 @@ void MainWindow::on_resultBar_valueChanged(int position)
     }
 }
 //--------------------------------------------------------------------------------------------------
-
-
 void MainWindow::on_drawAllButton_clicked()
 {
     Rworld->Clean();

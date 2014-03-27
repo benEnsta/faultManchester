@@ -40,6 +40,8 @@ void SIVIA::runAll(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distanc
     }
 }
 
+
+
 //---------------------------------------------------------------------------
 void SIVIA::runAll2(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distance){
 
@@ -69,7 +71,7 @@ void SIVIA::runAll2(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distan
         }
         C_q_in(X0, L.size()-N_outliers, L);
         if (X0.IsEmpty())      sortie=true;
-        if (decrease(Xold,X0)<0.001) sortie=true;
+        if (decrease(Xold,X0)<0.1e-7) sortie=true;
     }
 
 

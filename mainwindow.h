@@ -48,6 +48,7 @@ public:
     void exportResults(const vector<box> &T);
     void logRobot(int robNum);
     void generateDistancesWith2BrokenSensors(int nb0);
+    void generateDistancesWithoutOutliers(int nb0);
 private:
     vector<box> T0;
 private slots:
@@ -57,7 +58,7 @@ private slots:
     void on_runTestBtn_clicked();
     void on_resultBar_valueChanged(int position);
     void on_N_outliers_editingFinished();
-    void on_EpsilonSpinBox_editingFinished();
+
     void on_contractAll_clicked();
     void on_resultBox_valueChanged(int arg1);
     void on_drawAllButton_clicked();

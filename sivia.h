@@ -9,9 +9,8 @@
 #include <QDebug>
 #include <vector>
 #include <list>
-
+#include <fstream>
 using namespace std;
-enum {YELLOWBOX, DARKBOX, INSIDEBOX, OUTSIDEBOX, DARKBLUEBOX};
 typedef vector <vector < interval> > iMatrix;
 class SIVIA : public QObject
 {
@@ -24,13 +23,10 @@ public:
 
     // Parametre de l'algorythme
     int N_outliers;
-    float epsilon;
-    int nb_robots;
-    int dim_state;
+
 
     AContractorPtr contractor;
-    int m;
-    int reccordNumber;
+
 
     void contractCircle(interval &x0, interval &y0, interval &x1, interval &y1, interval &d);
     void contractCircle(interval& x0,interval& y0, double x1, double y1, interval& d);
