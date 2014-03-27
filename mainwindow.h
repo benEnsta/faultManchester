@@ -26,9 +26,9 @@ public:
 
 
     void runLocalisation();
-    void generateData(int steps_per_tour, int nb);
+    void generateData(int steps_per_tour, int numberOfStep);
     void generateDistancesWithRandomOutliers(int nb0);
-    void generateDistancesWithBrokenSensor(int nb0, int robNumber, int timeStep);
+    void generateDistancesWithBrokenSensor(int nb0, int robNumber, int intialStep, int finalStep);
     void checkIntegrity(vector<box> &T0);
 
 
@@ -44,11 +44,12 @@ public:
 
 
 
-    void drawOutliers();
+    void drawOutliers(int tmax);
     void exportResults(const vector<box> &T);
     void logRobot(int robNum);
     void generateDistancesWith2BrokenSensors(int nb0);
     void generateDistancesWithoutOutliers(int nbSteps);
+    void breakSensor(int robNumber, int intialStep, int finalStep);
 private:
     vector<box> T0;
 private slots:

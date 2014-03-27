@@ -110,25 +110,11 @@ void MainWindow::generateDistancesWithoutOutliers(int nbSteps){
 }
 
 // return the distance between the robot number n1 and n2 .
-void MainWindow::generateDistancesWithBrokenSensor(int nb0, int robNumber, int timeStep){
+void MainWindow::generateDistancesWithBrokenSensor(int nb0, int robNumber, int intialStep, int finalStep){
     int nOut = 0;
-    for(uint i = 0; i < nb0; i++){ // for each time step
-        iMatrix dist(rob.size(),vector<interval> (rob.size()));
-        for(uint k = 0; k < rob.size(); k++){ // for each pair of robot i,j
-            for(uint j = 0; j < rob.size(); j++){
-                if(k == j) continue;
-                double trueDistance = hypot(rob[k]->x_v[i] - rob[j]->x_v[i], rob[k]->y_v[i] - rob[j]->y_v[i]);
+    generateDistancesWithoutOutliers(nb0);
 
-                double noise = -0.09 + 0.18*rand()/(RAND_MAX);
-                dist[k][j] = interval(trueDistance + noise) + interval(-0.1,0.1);
-            }
-        }
-        distances.push_back(dist);
-
-
-    }
-
-    for(uint i = timeStep; i < distances.size(); i++){
+    for(uint i = intialStep; i < finalStep; i++){
         for(uint j = 0; j < rob.size(); j++){
 //            if(i == j) continue;
             distances[i][robNumber][j] = interval(0,0);
@@ -137,6 +123,20 @@ void MainWindow::generateDistancesWithBrokenSensor(int nb0, int robNumber, int t
     }
     qDebug() << "noutlier"  << nOut;
 }
+
+void MainWindow::breakSensor(int robNumber, int intialStep, int finalStep){
+
+    int nOut = 0;
+    for(uint i = intialStep; i < finalStep; i++){
+        for(uint j = 0; j < rob.size(); j++){
+            if(j == robNumber) continue;
+            distances[i][robNumber][j] = interval(0,0);
+            nOut++;
+        }
+    }
+    qDebug() << "noutlier"  << nOut;
+}
+
 
 //-----------------------------------------------------------------------------------------------
 // return the distance between the robot number n1 and n2 with a noise.
@@ -213,32 +213,36 @@ void MainWindow::generateDistancesWith2BrokenSensors(int nb0){
 }
 //--------------------------------------------------------------------------------------------------
 // Generate trajectories for all robot and all distances between them
-void MainWindow::generateData(int steps_per_tour, int nb0 ){
+void MainWindow::generateData(int steps_per_tour, int numberOfStep ){
 
     // Clean previous datas
     distances.clear();
     // Generate robot's trajectory
     for(uint i = 0; i < rob.size(); i++){
         Robot* r = rob[i];
-        r->generate8(1.25*i+1,steps_per_tour,nb0);
+        r->generate8(1.25*i+1,steps_per_tour,numberOfStep);
     }
 
+    generateDistancesWithoutOutliers(numberOfStep);
 
     switch(ui->testCases->currentIndex()){
     case 0:
-        generateDistancesWithoutOutliers(nb0);
+//        generateDistancesWithoutOutliers(numberOfStep);
         break;
     case 1:
-        generateDistancesWithRandomOutliers(nb0);
+        generateDistancesWithRandomOutliers(numberOfStep);
         break;
     case 2:
-        generateDistancesWithBrokenSensor(nb0,ui->selectRob->currentIndex(),30,nb0);
+        breakSensor(1,30,distances.size());
         break;
     case 3:
-        generateDistancesWith2BrokenSensors(nb0);
+        breakSensor(2,60,80);
         break;
     case 4:
-        generateDistancesWith2BrokenSensors(nb0,2,60,80);
+        breakSensor(1,30,distances.size());
+        breakSensor(2,60,80);
+        break;
+
     }
 
     drawAllTrajectories();
@@ -407,10 +411,12 @@ void MainWindow::drawBoxesState(int step){
 
 //--------------------------------------------------------------------------------------------------
 // Color box which contains wrong measurment
-void MainWindow::drawOutliers(){
+void MainWindow::drawOutliers(int tmax){
     int size = outliers.size()/3;
+
     for(uint i = 0; i < size; i++){
         int step = outliers[3*i];
+        if(step > tmax) continue;
         int idx = outliers[3*i+1];
         int idy = outliers[3*i+2];
         Rworld->DrawBox(T0[step][2*idx+1].inf,T0[step][2*idx+1].sup,T0[step][2*idx+2].inf,T0[step][2*idx+2].sup,QPen(Qt::darkMagenta),QBrush(Qt::red));
@@ -489,7 +495,7 @@ void MainWindow::on_drawAllButton_clicked()
         drawBoxesState(i);
     }
     if(!T0[0].IsEmpty())
-        drawOutliers();
+        drawOutliers(oo);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -510,5 +516,5 @@ void MainWindow::on_drawOneButton_clicked()
         drawBoxesState(i);
     }
     if(!T0[0].IsEmpty())
-        drawOutliers();
+        drawOutliers(ui->nbStepPerTour->value());
 }
