@@ -24,7 +24,6 @@ MainWindow::MainWindow(QWidget *parent) :
     xmin=-width;xmax=width;    ymin=-width;ymax=width;
 //    xmin=-13;xmax=1;    ymin=-13;ymax=1;
     //xmin=-1.2;xmax=2.8;    ymin=2.2;ymax=5.8;
-    Rsivia=new repere(this,ui->graphicsView,xmin,xmax,ymin,ymax);
     Rworld=new repere(this,ui->graphicsView_World,xmin,xmax,ymin,ymax);
     sivia = new SIVIA();
 
@@ -52,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //    rob.push_back(new Robot(4.5,-3.5,M_PI_4, 0.01));
 //    ui->selectRob->addItem("Robot 6");
     ui->selectRob->setCurrentIndex(1);
-    ui->nbStep->setValue(100);
+    ui->nbStep->setValue(150);
 //    ui->N_outliers->setMaximum(rob.size()-1);
     ui->resultBar->setMaximum(0);
     ui->resultBox->setMaximum(0);
@@ -71,6 +70,15 @@ MainWindow::~MainWindow()
 }
 
 
+
+//------------------------------------------------------------------------------------------------------
+//--------------------------   Data generation functions -----------------------------------------------
+//------------------------------------------------------------------------------------------------------
+
+
+
+
+
 double generateRandomOutliers(int i, int j, int k, double dist){
     int noise_rd =  rand();
     if( ((double) noise_rd/RAND_MAX) > 0.99){
@@ -84,9 +92,8 @@ double generateRandomOutliers(int i, int j, int k, double dist){
     return dist;
 }
 
-void MainWindow::generateDistancesWithoutOutliers(int nb0){
-    int nOut = 0;
-    for(uint i = 0; i < nb0; i++){ // for each time step
+void MainWindow::generateDistancesWithoutOutliers(int nbSteps){
+    for(uint i = 0; i < nbSteps; i++){ // for each time step
         iMatrix dist(rob.size(),vector<interval> (rob.size()));
         for(uint k = 0; k < rob.size(); k++){ // for each pair of robot i,j
             for(uint j = 0; j < rob.size(); j++){
@@ -100,7 +107,6 @@ void MainWindow::generateDistancesWithoutOutliers(int nb0){
         }
         distances.push_back(dist);
     }
-    qDebug() << "noutlier"  << nOut;
 }
 
 // return the distance between the robot number n1 and n2 .
@@ -136,6 +142,12 @@ void MainWindow::generateDistancesWithBrokenSensor(int nb0, int robNumber, int t
 // return the distance between the robot number n1 and n2 with a noise.
 // Outlier generation could be added in this part
 void MainWindow::generateDistancesWithRandomOutliers(int nb0){
+
+    // generate true data
+    generateDistancesWithoutOutliers(nb0);
+
+
+
     int nOut = 0;
     for(uint i = 0; i < nb0; i++){ // for each time step
         iMatrix dist(rob.size(),vector<interval> (rob.size()));
@@ -201,14 +213,14 @@ void MainWindow::generateDistancesWith2BrokenSensors(int nb0){
 }
 //--------------------------------------------------------------------------------------------------
 // Generate trajectories for all robot and all distances between them
-void MainWindow::generateData(int nb0){
+void MainWindow::generateData(int steps_per_tour, int nb0 ){
 
     // Clean previous datas
     distances.clear();
     // Generate robot's trajectory
     for(uint i = 0; i < rob.size(); i++){
         Robot* r = rob[i];
-        r->generate8(1.25*i+1,nb0);
+        r->generate8(1.25*i+1,steps_per_tour,nb0);
     }
 
 
@@ -220,11 +232,13 @@ void MainWindow::generateData(int nb0){
         generateDistancesWithRandomOutliers(nb0);
         break;
     case 2:
-        generateDistancesWithBrokenSensor(nb0,ui->selectRob->currentIndex(),30);
+        generateDistancesWithBrokenSensor(nb0,ui->selectRob->currentIndex(),30,nb0);
         break;
     case 3:
         generateDistancesWith2BrokenSensors(nb0);
         break;
+    case 4:
+        generateDistancesWith2BrokenSensors(nb0,2,60,80);
     }
 
     drawAllTrajectories();
@@ -350,9 +364,10 @@ void MainWindow::drawRobots(int step){
 
 //--------------------------------------------------------------------------------------------------
 // Draw the trajectory of the robot number <robot_num>
-void MainWindow::drawTrajectory(int robot_num){
+void MainWindow::drawTrajectory(int robot_num, int tmax){
     Robot* r = rob[robot_num];
-    for(uint i = 1; i < r->x_v.size(); i++){
+    tmax = (tmax <  r->x_v.size()) ? tmax : r->x_v.size() ;
+    for(uint i = 1; i < tmax; i++){
         Rworld->DrawLine(r->x_v[i-1], r->y_v[i-1],r->x_v[i], r->y_v[i],color[robot_num]);
         if( i%10 == 0){
             Rworld->DrawRobot(r->x_v[i],r->y_v[i],r->theta_v[i],0.1,color[robot_num], brushs[robot_num]);
@@ -363,7 +378,7 @@ void MainWindow::drawTrajectory(int robot_num){
 // Draw trajectory of all robots
 void MainWindow::drawAllTrajectories(){
     for(uint i = 0; i < rob.size(); i++){
-        drawTrajectory(i);
+        drawTrajectory(i,oo);
     }
 }
 
@@ -436,7 +451,6 @@ void MainWindow::on_N_outliers_editingFinished()
 //--------------------------------------------------------------------------------------------------
 void MainWindow::on_clearButtton_clicked()
 {
-    Rsivia->Clean();
     Rworld->Clean();
     drawRobots();
 }
@@ -444,7 +458,7 @@ void MainWindow::on_clearButtton_clicked()
 //--------------------------------------------------------------------------------------------------
 void MainWindow::on_runTestBtn_clicked()
 {
-    generateData(ui->nbStep->value());
+    generateData(ui->nbStepPerTour->value(), ui->nbStep->value());
 
 }
 void MainWindow::on_resultBox_valueChanged(int arg1)
@@ -482,4 +496,19 @@ void MainWindow::on_drawAllButton_clicked()
 void MainWindow::on_contractAll_clicked()
 {
     runLocalisation();
+}
+
+void MainWindow::on_drawOneButton_clicked()
+{
+    Rworld->Clean();
+    drawRobots(0);
+    int nbStepsToDraw = ui->nbStepPerTour->value()+1;
+    for(uint i = 0; i < rob.size(); i++){
+        drawTrajectory(i,nbStepsToDraw);
+    }
+    for(uint i = 0; i < nbStepsToDraw ; i++){
+        drawBoxesState(i);
+    }
+    if(!T0[0].IsEmpty())
+        drawOutliers();
 }

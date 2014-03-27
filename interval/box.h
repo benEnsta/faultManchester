@@ -34,6 +34,7 @@ box& Intersect(const box& Y);
 bool IsEmpty (void) const;
 double Width(void);
 double SumWidth(void);
+void setEmpty();
 
 
 //----------------------OPERATEURS----------------------------------------------

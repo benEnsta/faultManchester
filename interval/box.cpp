@@ -102,6 +102,13 @@ double box::SumWidth(void)
    return w;
 }
 
+void box::setEmpty()
+{
+    for(uint i = 0; i < dim; i++){
+        data[i] = interval();
+    }
+}
+
 
 box& box::Intersect(const box& Y)
 {  box X=*this;

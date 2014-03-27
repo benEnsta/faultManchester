@@ -64,6 +64,7 @@ void SIVIA::runAll2(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distan
                     contractCircle(X[i*step + 2*j + 1],X[i*step + 2*j + 2],
                                    X[i*step + 2*k + 1],X[i*step + 2*k + 2],i1);
                     Ctrajectory(X,rob);
+                    if(X.IsEmpty()) X.setEmpty();
                     L.push_back(X);
                 }
             }
@@ -81,6 +82,55 @@ void SIVIA::runAll2(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distan
     T0 = box2vector(X0,2*rob->size());
 }
 
+
+void SIVIA::contractAll(box & X, int i, vector<Robot*> *rob, vector<iMatrix> &distance){
+//    vector<box> L;
+    int step = rob->size()*2;
+    for(uint j = 0; j < rob->size(); j++){
+        for(uint k = 0; k < rob->size(); k++){
+            if(j == k) continue;
+//            box X(X0);
+            interval i1 = distance[i][j][k];
+            contractCircle(X[i*step + 2*j + 1],X[i*step + 2*j + 2],
+                           X[i*step + 2*k + 1],X[i*step + 2*k + 2],i1);
+//            Ctrajectory(X,rob);
+//            L.push_back(X);
+        }
+    }
+}
+
+//---------------------------------------------------------------------------
+void SIVIA::runAll3(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distance){
+
+    int nb_step = T0.size();
+    int step = rob->size()*2;
+    bool sortie=false;
+    box X0 = vector2box(T0);
+    while (!sortie)
+    {  box Xold(X0);
+        // Call the contracteur
+        vector<box> L;
+        // Forward propagation
+        Ctrajectory(X0,rob);
+        for(uint i = 0; i < nb_step; i++){
+            box X(X0);
+            contractAll(X,i,rob, distance);
+            Ctrajectory(X,rob);
+            L.push_back(X);
+        }
+        C_q_in(X0, L.size()-N_outliers, L);
+        if (X0.IsEmpty())      sortie=true;
+        if (decrease(Xold,X0)<0.1e-7) sortie=true;
+    }
+
+
+    if(X0.IsEmpty()){
+        qDebug() << "X is Empty";
+    }
+    T0 = box2vector(X0,2*rob->size());
+}
+
+//---------------------------------------------------------------------------
 vector<int> SIVIA::findOutliers(vector<box>& T0,vector<Robot*> *rob, vector<iMatrix> &distance){
     int nb_step = T0.size();
     int step = rob->size()*2;

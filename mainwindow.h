@@ -26,7 +26,7 @@ public:
 
 
     void runLocalisation();
-    void generateData(int nb);
+    void generateData(int steps_per_tour, int nb);
     void generateDistancesWithRandomOutliers(int nb0);
     void generateDistancesWithBrokenSensor(int nb0, int robNumber, int timeStep);
     void checkIntegrity(vector<box> &T0);
@@ -38,7 +38,7 @@ public:
     // DRAWING FUNCTIONS
     void drawRobots(int step = 0);
     void drawAllTrajectories();
-    void drawTrajectory(int robot_num);
+    void drawTrajectory(int robot_num, int tmax);
     void drawBoxesState(int step);
     void drawCircles(int num_rob, int pos);
 
@@ -48,7 +48,7 @@ public:
     void exportResults(const vector<box> &T);
     void logRobot(int robNum);
     void generateDistancesWith2BrokenSensors(int nb0);
-    void generateDistancesWithoutOutliers(int nb0);
+    void generateDistancesWithoutOutliers(int nbSteps);
 private:
     vector<box> T0;
 private slots:
@@ -68,9 +68,11 @@ private slots:
 
 
 
+    void on_drawOneButton_clicked();
+
 private:
     Ui::MainWindow *ui;
-    repere *Rsivia,*Rworld;
+    repere *Rworld;
     SIVIA* sivia;
     vector<Robot*> rob;
     vector <iMatrix> distances;

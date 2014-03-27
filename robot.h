@@ -17,7 +17,7 @@ public:
 
     void cleanAll();
     void Clock(double,double);
-    int generate8(double R, int nb_steps=1e10);
+    int generate8(double R, int nb_steps_per_tour=100, int nb_steps=120);
 };
 
 #endif // ROBOT_H

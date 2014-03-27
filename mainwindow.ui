@@ -24,38 +24,13 @@
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="graphicsView">
-    <property name="enabled">
-     <bool>true</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>50</y>
-      <width>350</width>
-      <height>350</height>
-     </rect>
-    </property>
-    <property name="verticalScrollBarPolicy">
-     <enum>Qt::ScrollBarAlwaysOff</enum>
-    </property>
-    <property name="horizontalScrollBarPolicy">
-     <enum>Qt::ScrollBarAlwaysOff</enum>
-    </property>
-    <property name="interactive">
-     <bool>false</bool>
-    </property>
-    <property name="viewportUpdateMode">
-     <enum>QGraphicsView::FullViewportUpdate</enum>
-    </property>
-   </widget>
    <widget class="QPushButton" name="clearButtton">
     <property name="geometry">
      <rect>
       <x>170</x>
-      <y>480</y>
+      <y>160</y>
       <width>161</width>
-      <height>35</height>
+      <height>25</height>
      </rect>
     </property>
     <property name="text">
@@ -65,24 +40,27 @@
    <widget class="QSpinBox" name="nbStep">
     <property name="geometry">
      <rect>
-      <x>230</x>
-      <y>0</y>
-      <width>60</width>
-      <height>27</height>
+      <x>300</x>
+      <y>16</y>
+      <width>61</width>
+      <height>21</height>
      </rect>
     </property>
     <property name="maximum">
      <number>1000</number>
     </property>
+    <property name="singleStep">
+     <number>10</number>
+    </property>
     <property name="value">
-     <number>200</number>
+     <number>150</number>
     </property>
    </widget>
    <widget class="QComboBox" name="selectRob">
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>420</y>
+      <y>100</y>
       <width>111</width>
       <height>21</height>
      </rect>
@@ -92,9 +70,9 @@
     <property name="geometry">
      <rect>
       <x>170</x>
-      <y>420</y>
+      <y>100</y>
       <width>161</width>
-      <height>35</height>
+      <height>25</height>
      </rect>
     </property>
     <property name="text">
@@ -108,7 +86,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>610</y>
+      <y>340</y>
       <width>361</width>
       <height>16</height>
      </rect>
@@ -124,7 +102,7 @@
     <property name="geometry">
      <rect>
       <x>300</x>
-      <y>580</y>
+      <y>310</y>
       <width>60</width>
       <height>27</height>
      </rect>
@@ -160,9 +138,9 @@
     <property name="geometry">
      <rect>
       <x>170</x>
-      <y>450</y>
+      <y>130</y>
       <width>161</width>
-      <height>35</height>
+      <height>25</height>
      </rect>
     </property>
     <property name="text">
@@ -173,20 +151,20 @@
     <property name="geometry">
      <rect>
       <x>170</x>
-      <y>510</y>
+      <y>190</y>
       <width>161</width>
-      <height>35</height>
+      <height>25</height>
      </rect>
     </property>
     <property name="text">
-     <string>Draw All</string>
+     <string>Draw All Position</string>
     </property>
    </widget>
    <widget class="QCheckBox" name="drawCircles">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>580</y>
+      <y>310</y>
       <width>161</width>
       <height>20</height>
      </rect>
@@ -202,7 +180,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>490</y>
+      <y>170</y>
       <width>111</width>
       <height>26</height>
      </rect>
@@ -228,6 +206,76 @@
      </property>
     </item>
    </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>15</y>
+      <width>121</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::RightToLeft</enum>
+    </property>
+    <property name="text">
+     <string>number steps</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>40</y>
+      <width>121</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::RightToLeft</enum>
+    </property>
+    <property name="text">
+     <string>steps per revolution</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="nbStepPerTour">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>40</y>
+      <width>61</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>10000</number>
+    </property>
+    <property name="singleStep">
+     <number>10</number>
+    </property>
+    <property name="value">
+     <number>100</number>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="drawOneButton">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>220</y>
+      <width>161</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Draw One revolution</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -235,7 +283,7 @@
      <x>0</x>
      <y>0</y>
      <width>1097</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>

@@ -50,6 +50,8 @@ public:
     void Ctrajectory(box &X, vector<Robot *> *rob);
     vector<box> box2vector(box X, int boxSize);
     vector<int> findOutliers(vector<box> &T0, vector<Robot *> *rob, vector<iMatrix> &distance);
+    void runAll3(vector<box> &T0, vector<Robot *> *rob, vector<iMatrix> &distance);
+    void contractAll(box &X, int i, vector<Robot *> *rob, vector<iMatrix> &distance);
 };
 
 #endif // SIVIA_H
