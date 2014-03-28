@@ -1,3 +1,11 @@
+/**
+ * \file      mainwindow.h.
+ * \author    Benoit DESROCHERS <benoitdesrochers@ensta-bretagne.org>
+ * \version   1.0
+ * \date      mar 24, 2014
+ * \brief     Gui header interface
+ */
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 

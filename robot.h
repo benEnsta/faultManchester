@@ -1,3 +1,11 @@
+/**
+ * \file      robot.h.
+ * \author    Benoit DESROCHERS <benoitdesrochers@ensta-bretagne.org>
+ * \version   1.0
+ * \date      mar 24, 2014
+ * \brief     Defined robot model
+ *
+ */
 #ifndef ROBOT_H
 #define ROBOT_H
 #include <qmath.h>

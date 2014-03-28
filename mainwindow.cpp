@@ -1,7 +1,15 @@
+/**
+ * \file      mainwindow.cpp
+ * \author    Benoit DESROCHERS <benoitdesrochers@ensta-bretagne.org>
+ * \version   1.0
+ * \date      mar 24, 2014
+ * \brief     Gui functions and data generation used or test cases are defined in the file
+ */
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 
+// Parameters
 double t = 0;
 double dt = 0.05;
 double u1 = 0, u2 = 0;

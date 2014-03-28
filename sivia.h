@@ -1,3 +1,11 @@
+/**
+ * \file      sivia.h
+ * \author    Benoit DESROCHERS <benoitdesrochers@ensta-bretagne.org>
+ * \version   1.0
+ * \date      mar 24, 2014
+ * \brief     SIVIA header
+ */
+
 #ifndef SIVIA_H
 #define SIVIA_H
 #include <QObject>
@@ -18,41 +26,27 @@ class SIVIA : public QObject
 public:
     explicit SIVIA();
 
-     typedef void (SIVIA::*AContractorPtr)(box &);
-    ~SIVIA();
+     ~SIVIA();
 
     // Parametre de l'algorythme
     int N_outliers;
 
+    void runAll2(vector<box> &T0, vector<Robot *> *rob, vector<iMatrix> &distance);
+    void Ctrajectory(box &X, vector<Robot *> *rob);
+    vector<int> findOutliers(vector<box> &T0, vector<Robot *> *rob, vector<iMatrix> &distance);
 
-    AContractorPtr contractor;
-
-
+    // Elementary contractors
     void contractCircle(interval &x0, interval &y0, interval &x1, interval &y1, interval &d);
     void contractCircle(interval& x0,interval& y0, double x1, double y1, interval& d);
 
-
     void Incremente(interval &X1, interval &Y1, interval &X, interval &Y, double theta, double vit, double noise);
-    void Incremente(box &X, box &X0, double theta, double vit, double err);
-    void Decremente(box &X, box &X0, double theta, double vit, double err);
     void Decremente(interval &X1, interval &Y1, interval &X, interval &Y, double theta, double V, double err);
 
-    void runAll(vector<box> &T0, vector<Robot *> *rob, vector<iMatrix> &distance);
-    void outerContractAll2(box &X, iMatrix &distances);
-    void fixPoint(box &X, iMatrix &distance);
-    void innerContract(box &X, int r);
-    void outerContract(box &X, int r);
-    void outerContractAll(box &X);
-    void contractOneRobot(box &X, vector<box> &P, interval *distances, int robotNumber, bool direction);
 
+    // tool functions
     box vector2box(vector<box> &T);
-    void runAll2(vector<box> &T0, vector<Robot *> *rob, vector<iMatrix> &distance);
-    void Ctrajectory(box &X, vector<Robot *> *rob);
     vector<box> box2vector(box X, int boxSize);
-    vector<int> findOutliers(vector<box> &T0, vector<Robot *> *rob, vector<iMatrix> &distance);
-    void runAll3(vector<box> &T0, vector<Robot *> *rob, vector<iMatrix> &distance);
-    void contractAll(box &X, int i, vector<Robot *> *rob, vector<iMatrix> &distance);
-    void fixPoint(interval &x0, interval &y0, interval &x1, interval &y1, interval &distance);
+
 };
 
 #endif // SIVIA_H

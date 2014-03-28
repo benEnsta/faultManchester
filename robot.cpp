@@ -1,7 +1,20 @@
+/**
+ * \file      robot.cpp
+ * \author    Benoit DESROCHERS <benoitdesrochers@ensta-bretagne.org>
+ * \version   1.0
+ * \date      mar 24, 2014
+ * \brief     robot class definied here
+ */
 #include "robot.h"
 #include <stdio.h>
 extern double dt;
-
+/**
+ * @brief Robot::Robot Contructor of a robot
+ * @param x initial x position
+ * @param y initial y position
+ * @param theta initial theta
+ * @param noise value of the noise used for the simulation
+ */
 Robot::Robot(double x, double y, double theta, double noise)
 {
     this->x0=x;

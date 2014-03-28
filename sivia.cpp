@@ -1,4 +1,13 @@
+/**
+ * \file      sivia.cpp
+ * \author    Benoit DESROCHERS <benoitdesrochers@ensta-bretagne.org>
+ * \version   1.0
+ * \date      mar 24, 2014
+ * \brief     SIVIA class which implements the localisation and fault detection algorithm
+ */
 #include "sivia.h"
+
+
 
 // Global Variable
 extern double dt;
