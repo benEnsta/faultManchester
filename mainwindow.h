@@ -1,5 +1,5 @@
 /**
- * \file      mainwindow.h.
+ * \file      mainwindow.h
  * \author    Benoit DESROCHERS <benoitdesrochers@ensta-bretagne.org>
  * \version   1.0
  * \date      mar 24, 2014
