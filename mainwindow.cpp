@@ -286,6 +286,14 @@ void MainWindow::exportResults( const vector<box> &T ){
 
 //--------------------------------------------------------------------------------------------------
 // Run the intervals algorithm
+/**
+ * @brief MainWindow::runLocalisation
+ * This function runs the localisation and faults detection algorithm.
+ * <T0> is a vector and each box is a 2*numberOfRobot dimentionnal box.
+ * T0[Ø] = x0(0), y0(0), x1(0), y2(0), ..., xn(0), yn(0)
+ * T0[1] = x0(1), y0(1), x1(1), y2(1), ..., xn(1), yn(1)
+ * ...
+ */
 void MainWindow::runLocalisation()
 {
 
@@ -294,17 +302,22 @@ void MainWindow::runLocalisation()
     int step = distances.size();
     T0 = vector<box>(step,box(interval(-oo,oo), 2*rob.size()));
 
+    // You could chose here the intial uncertainty
     for(uint i = 0; i < rob.size(); i++){
         T0[0][2*i+1] = interval(rob[i]->x_v[0]) + interval(-0.05, 0.05);
         T0[0][2*i+2] = interval(rob[i]->y_v[0]) + interval(-0.05, 0.05);
     }
 
 
+    // Pass the number of outliers used by the Q-intersection in the sivia alg
     sivia->N_outliers = ui->N_outliers->value();
+    // Run the localisation
     sivia->runAll2(T0,&rob,distances);
 
+    // Identify and extract outliers
     outliers  = sivia->findOutliers(T0,&rob,distances);
 
+    // Draw all trajectories
     on_drawAllButton_clicked();
     checkIntegrity(T0);
     exportResults(T0);
@@ -313,6 +326,11 @@ void MainWindow::runLocalisation()
 
 //--------------------------------------------------------------------------------------------------
 // check if the true position of each robot belong the the corresponding box
+/**
+* @brief MainWindow::checkIntegrity
+*   Check if for all step <i>, the true position of robot <j> is included in the corresponding box <T0>
+* @param T0 Vector of boxes.
+*/
 void MainWindow::checkIntegrity(vector<box> &T0){
     for(int i = T0.size()-1; i >= 0; i--){
         for(uint j = 0; j < rob.size(); j++){

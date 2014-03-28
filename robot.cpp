@@ -12,6 +12,10 @@ Robot::Robot(double x, double y, double theta, double noise)
     cleanAll();
 }
 
+/**
+ * @brief Robot::cleanAll
+ * Remove all internal datas.
+ */
 void Robot::cleanAll()
 {
     speed_v.clear();
@@ -25,7 +29,11 @@ void Robot::cleanAll()
 }
 
 
-
+/**
+ * @brief Robot::Clock Simulation one step
+ * @param u1 theta input
+ * @param u2 speed input
+ */
 void Robot::Clock(double u1, double u2)
 {
     double x = x_v.back();
@@ -45,6 +53,14 @@ void Robot::Clock(double u1, double u2)
 }
 
 // Generate a 8 as trajectori
+/**
+ * @brief Robot::generate8
+ * Generate an 8 as trajectory for the robot.
+ * @param R Raduis of the loop
+ * @param nb_steps_per_tour number of step use to make a full rotation
+ * @param nb_steps total number of steps used for the simulation
+ * @return 0
+ */
 int Robot::generate8(double R, int nb_steps_per_tour, int nb_steps){
     cleanAll();
     //double n = (int) ((2*M_PI*R) / (V0*dt));
